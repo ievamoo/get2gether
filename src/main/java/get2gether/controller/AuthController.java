@@ -5,6 +5,7 @@ import get2gether.dto.AuthResponseDto;
 import get2gether.dto.RegisterRequestDto;
 import get2gether.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,7 +26,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDto> registerUser(@RequestBody RegisterRequestDto request) {
         String jwt = authService.registerAndGenerateToken(request);
-        return ResponseEntity.ok(new AuthResponseDto(jwt));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new AuthResponseDto(jwt));
     }
 
 }

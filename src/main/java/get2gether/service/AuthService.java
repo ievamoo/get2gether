@@ -48,25 +48,23 @@ public class AuthService {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RegistrationException("Username already exists");
         }
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RegistrationException("Email already exists");
-        }
-
-        User user = User.builder()
-                .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
-                .roles(List.of(Role.USER))
-                .build();
-
+        var user = createUser(request);
         userRepository.save(user);
         return generateToken(user.getUsername());
     }
 
-    protected String generateToken(String username) {
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+    private User createUser(RegisterRequestDto request) {
+        return User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .roles(List.of(Role.USER))
+                .build();
+    }
+
+    private String generateToken(String username) {
+        var userDetails = userDetailsService.loadUserByUsername(username);
         return jwtUtil.generateToken(userDetails);
     }
 }
