@@ -1,10 +1,12 @@
 package get2gether.config;
 
+import get2gether.model.Role;
 import get2gether.security.JwtRequestFilter;
 import get2gether.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -31,6 +33,8 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+
+
     private final JwtRequestFilter jwtRequestFilter;
     private final CustomUserDetailsService customUserDetailsService;
 
@@ -41,14 +45,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/login", "/auth/register", "/error", "/h2-console/**").permitAll()
-//                        .requestMatchers(HttpMethod.GET, "/api/carPart/**").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name())
-//                        .requestMatchers(HttpMethod.POST, "/api/carPart/**").hasAuthority(Role.ADMIN.name())
-//                        .requestMatchers(HttpMethod.PUT, "/api/carPart/**").hasAuthority(Role.ADMIN.name())
-//                        .requestMatchers(HttpMethod.DELETE, "/api/carPart/**").hasAuthority(Role.ADMIN.name())
-//                        .requestMatchers("/api/suppliers/**").hasAuthority(Role.ADMIN.name())
-//                        .requestMatchers("/api/user/**").hasAnyAuthority(Role.USER.name(), Role.ADMIN.name())
-//                        .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name())
-//                        .requestMatchers(HttpMethod.POST, "/api/orders/**").hasAuthority(Role.USER.name())
+                        .requestMatchers(HttpMethod.GET, "/user/**").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name())
+                        .requestMatchers(HttpMethod.PUT, "/user/**").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name())
+                        .requestMatchers(HttpMethod.DELETE, "/user/**").hasAuthority(Role.USER.name())
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

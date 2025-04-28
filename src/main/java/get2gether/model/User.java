@@ -9,6 +9,8 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.List;
 
+//TODO change roles to a single role (change everything else accordingly)
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -33,9 +35,6 @@ public class User {
 
     @Column(nullable = false)
     private String lastName;
-
-    @Column(unique = true, nullable = false)
-    private String email;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)
