@@ -6,10 +6,7 @@ import get2gether.dto.RegisterRequestDto;
 import get2gether.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponseDto> createAuthenticationToken(@RequestBody AuthRequestDto authRequest) {
@@ -31,4 +27,5 @@ public class AuthController {
         String jwt = authService.registerAndGenerateToken(request);
         return ResponseEntity.ok(new AuthResponseDto(jwt));
     }
+
 }
