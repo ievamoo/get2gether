@@ -89,7 +89,6 @@ class AuthServiceTest {
                 () -> testAuthService.authenticateAndGenerateToken("test@gmail.com", "password"));
     }
 
-
     @Test
     void registerAndGenerateToken_whenUsernameExistShouldRegisterAndReturnToken() {
         var registerRequest = TestData.getRegisterRequestDto();

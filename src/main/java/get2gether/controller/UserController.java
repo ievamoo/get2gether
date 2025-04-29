@@ -1,7 +1,6 @@
 package get2gether.controller;
 
 import get2gether.dto.UserDto;
-import get2gether.model.User;
 import get2gether.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

@@ -8,16 +8,15 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 import java.util.Set;
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 @Builder
-public class UserDto {
+public class GroupDto {
     private Long id;
-    private String username;
-    private String firstName;
-    private String lastName;
-    private Set<AvailabilityDto> availableDays;
-    private Set<GroupDto> groups;
-    private List<InviteDto> invitesReceivedDto;
+    private String name;
+    private UserDto admin;
+    private Set<UserDto> members;
+    private List<EventDto> events;
+    private List<MessageDto> messages;
 }
