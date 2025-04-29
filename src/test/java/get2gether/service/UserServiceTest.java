@@ -2,10 +2,9 @@ package get2gether.service;
 
 import get2gether.TestData;
 import get2gether.dto.UserDto;
-import get2gether.model.Role;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
-import get2gether.util.UserMapper;
+import get2gether.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
