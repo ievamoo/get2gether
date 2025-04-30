@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 @NoArgsConstructor
 @Data
 @Builder
+@DynamicUpdate
 public class Event {
 
     @Id
@@ -34,6 +36,7 @@ public class Event {
     @JsonBackReference
     private Group group;
 
+    //eventas turi/neturi komentaru (chato), jeigu nieks nepapraso
     @Transient
     private List<Message> messages;
 }
