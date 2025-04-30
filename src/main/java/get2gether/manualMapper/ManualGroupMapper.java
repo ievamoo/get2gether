@@ -40,4 +40,10 @@ public class ManualGroupMapper {
                 .build();
 
     }
+
+    public GroupDto modelToDtoOnUpdate(Group group) {
+        return GroupDto.builder()
+                .name(group.getName())
+                .build();
+    }
 }
