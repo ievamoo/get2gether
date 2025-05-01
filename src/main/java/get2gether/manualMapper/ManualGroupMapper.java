@@ -1,7 +1,6 @@
 package get2gether.manualMapper;
 
 import get2gether.dto.GroupDto;
-import get2gether.mapper.UserMapper;
 import get2gether.model.Group;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,6 +42,13 @@ public class ManualGroupMapper {
 
     public GroupDto modelToDtoOnUpdate(Group group) {
         return GroupDto.builder()
+                .name(group.getName())
+                .build();
+    }
+
+    public GroupDto modelToDtoOnGroupLeave(Group group) {
+        return GroupDto.builder()
+                .id(group.getId())
                 .name(group.getName())
                 .build();
     }

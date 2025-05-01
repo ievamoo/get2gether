@@ -1,14 +1,21 @@
 package get2gether.service;
 
+import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
+import get2gether.exception.UserNotFoundException;
+import get2gether.manualMapper.ManualGroupMapper;
 import get2gether.model.User;
+import get2gether.repository.GroupRepository;
 import get2gether.repository.UserRepository;
 import get2gether.mapper.UserMapper;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +23,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final GroupRepository groupRepository;
+    private final ManualGroupMapper manualGroupMapper;
 
 
     public UserDto getUserByUsername(String username) {
@@ -46,5 +55,6 @@ public class UserService {
                 .map(userMapper::modelToDto)
                 .toList();
     }
+
 
 }
