@@ -1,5 +1,6 @@
 package get2gether.controller;
 
+import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
 import get2gether.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,6 +40,8 @@ public class UserController {
         userService.deleteUser(username);
         return ResponseEntity.noContent().build();
     }
+
+
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/all")

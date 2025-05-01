@@ -18,9 +18,9 @@ public class GroupController {
 
     private final GroupService groupService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<GroupDto> getGroupById(@PathVariable final Long id) {
-        return ResponseEntity.ok(groupService.getGroupById(id));
+    @GetMapping("/{groupId}")
+    public ResponseEntity<GroupDto> getGroupById(@PathVariable final Long groupId) {
+        return ResponseEntity.ok(groupService.getGroupById(groupId));
     }
 
     @PostMapping
@@ -30,25 +30,48 @@ public class GroupController {
         return ResponseEntity.status(HttpStatus.CREATED).body(groupService.createGroup(username, groupDto));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<GroupDto> editGroupName(@RequestBody final GroupDto editedGroup, @PathVariable final Long id) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(groupService.updateGroup(editedGroup, id));
+    @PutMapping("/{groupId}")
+    public ResponseEntity<GroupDto> editGroupName(@RequestBody final GroupDto editedGroup, @PathVariable final Long groupId) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(groupService.updateGroup(editedGroup, groupId));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGroup(Authentication authentication, @PathVariable final Long id) {
+    @DeleteMapping("/{groupId}")
+    public ResponseEntity<Void> deleteGroup(Authentication authentication, @PathVariable final Long groupId) {
         var username = authentication.getName();
-        groupService.deleteGroup(id, username);
+        groupService.deleteGroup(groupId, username);
         return ResponseEntity.noContent().build();
     }
 
-    @PostMapping("/{id}/members")
+    @PostMapping("/{groupId}/members")
     public ResponseEntity<Set<UserDto>> addNewMember(
-            @PathVariable final Long id,
+            @PathVariable final Long groupId,
             @RequestBody final UserDto userDto
     ) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(groupService.addMember(id, userDto));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(groupService.addMember(groupId, userDto));
     }
+
+    @DeleteMapping("/{groupId}/members/{memberToDelete}")
+    public ResponseEntity<Set<UserDto>> removeUserFromGroup(
+            @PathVariable final Long groupId,
+            @PathVariable final String  memberToDelete,
+            Authentication authentication
+    ) {
+        var username = authentication.getName();
+        var updatedMembers = groupService.removeUserFromGroup(groupId, memberToDelete, username);
+        return ResponseEntity.accepted().body(updatedMembers);
+    }
+
+    @DeleteMapping("/{groupId}/members/")
+    public ResponseEntity<Set<GroupDto>> leaveGroup(
+            @PathVariable final Long groupId,
+            Authentication authentication
+    ) {
+        var username = authentication.getName();
+        var updatedGroups = groupService.leaveGroup(groupId, username);
+        return ResponseEntity.accepted().body(updatedGroups);
+    }
+
+
 
 
 

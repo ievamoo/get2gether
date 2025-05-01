@@ -1,6 +1,5 @@
 package get2gether.exception;
 
-import ch.qos.logback.core.joran.spi.ActionException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -21,7 +20,8 @@ public class GlobalExceptionHandler {
             UsernameNotFoundException.class,
             EntityNotFoundException.class,
             EntityExistsException.class,
-            ForbiddenActionException.class
+            ForbiddenActionException.class,
+            UserNotFoundException.class
     })
     public ResponseEntity<Map<String, Object>> handleExceptions(Exception ex) {
         if (ex instanceof UsernameNotFoundException || ex instanceof EntityNotFoundException) {
