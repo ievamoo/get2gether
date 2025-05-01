@@ -15,5 +15,4 @@ public class ManualUserMapper {
                 .lastName(user.getLastName())
                 .build();
     }
-
 }

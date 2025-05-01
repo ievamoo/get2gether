@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -37,17 +36,18 @@ public class GroupController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteGroup(@PathVariable final Long id) {
-        groupService.deleteGroup(id);
+    public ResponseEntity<Void> deleteGroup(Authentication authentication, @PathVariable final Long id) {
+        var username = authentication.getName();
+        groupService.deleteGroup(id, username);
         return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("/{groupId}/add-member")
+    @PostMapping("/{id}/members")
     public ResponseEntity<Set<UserDto>> addNewMember(
-            @PathVariable Long groupId,
-            @RequestParam String username
+            @PathVariable final Long id,
+            @RequestBody final UserDto userDto
     ) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(groupService.addMember(groupId, username));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(groupService.addMember(id, userDto));
     }
 
 
