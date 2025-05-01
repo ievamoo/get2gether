@@ -52,4 +52,5 @@ public class User {
 
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Invite> invitesReceived;
+
 }
