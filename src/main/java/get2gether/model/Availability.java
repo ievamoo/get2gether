@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Entity
 @Data
@@ -22,12 +23,14 @@ public class Availability {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonBackReference
     private User user;
 
-    private LocalDate availableDay;
-
+    @ElementCollection
+    @CollectionTable(name = "availability_days", joinColumns = @JoinColumn(name = "availability_id"))
+    @Column(name = "available_day")
+    private Set<LocalDate> availableDays;
 }
+

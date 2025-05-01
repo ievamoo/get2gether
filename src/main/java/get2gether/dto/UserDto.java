@@ -17,7 +17,7 @@ public class UserDto {
     private String username;
     private String firstName;
     private String lastName;
-    private Set<AvailabilityDto> availableDays;
+    private AvailabilityDto availableDays;
     private Set<GroupDto> groups;
     private List<InviteDto> invitesReceivedDto;
 }

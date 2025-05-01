@@ -41,9 +41,9 @@ public class User {
     @Enumerated(EnumType.STRING)
     private List<Role> roles;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private Set<Availability> availableDays;
+    private Availability availableDays;
 
     @ManyToMany(mappedBy = "members")
     @JsonBackReference

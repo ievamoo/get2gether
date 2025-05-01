@@ -6,12 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class AvailabilityDto {
+    private Long id;
     private Long userId;
-    private LocalDate availableDay;
+    private Set<LocalDate> availableDays;
 }
