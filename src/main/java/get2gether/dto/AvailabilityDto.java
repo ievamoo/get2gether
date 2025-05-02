@@ -13,7 +13,6 @@ import java.util.Set;
 @NoArgsConstructor
 @Builder
 public class AvailabilityDto {
-    private Long id;
-    private Long userId;
+    private UserDto userDto;
     private Set<LocalDate> availableDays;
 }

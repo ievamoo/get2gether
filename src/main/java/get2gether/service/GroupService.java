@@ -14,7 +14,10 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,34 +33,37 @@ public class GroupService {
 
     public GroupDto getGroupById(Long id) {
         var foundGroup = getGroupByIdFromDb(id);
-        return manualGroupMapper.modelToDtoOnGet(foundGroup);
+        var availableDays = groupAvailableDays(foundGroup.getMembers());
+        return manualGroupMapper.modelToDtoOnGet(foundGroup).setGroupAvailability(availableDays);
     }
 
-
+    @Transactional
     public GroupDto createGroup(String username, GroupDto groupDto) {
         if (groupRepository.existsByName(groupDto.getName())) {
             throw new EntityExistsException("Group already exists by name: " + groupDto.getName());
         }
         var currentUser = userService.getUserFromDb(username);
-        var group = groupMapper.dtoToModelOnGroupCreate(groupDto);
-        group.setMembers(Set.of(currentUser));
-        group.setAdmin(currentUser);
+        var group = groupMapper.dtoToModelOnGroupCreate(groupDto)
+                .setMembers(Set.of(currentUser)).setAdmin(currentUser);
         var savedGroup = groupRepository.save(group);
         return manualGroupMapper.modelToDtoOnGroupCreate(savedGroup);
     }
 
+    @Transactional
     public GroupDto updateGroup(GroupDto editedGroup, Long id) {
         var group = getGroupByIdFromDb(id);
         group.setName(editedGroup.getName());
         return manualGroupMapper.modelToDtoOnUpdate(groupRepository.save(group));
     }
 
+    @Transactional
     public void deleteGroup(Long id, String username) {
         var group = getGroupByIdFromDb(id);
         checkIfActionAllowed(username, group);
         groupRepository.deleteById(id);
     }
 
+    @Transactional
     public Set<UserDto> addMember(Long id, UserDto userDto) {
         var group = getGroupByIdFromDb(id);
         var user = userService.getUserFromDb(userDto.getUsername());
@@ -71,6 +77,7 @@ public class GroupService {
                 .collect(Collectors.toSet());
     }
 
+    @Transactional
     public Set<UserDto> removeUserFromGroup(Long groupId, String memberToDelete, String username) {
         var group = getGroupByIdFromDb(groupId);
         checkIfAdmin(memberToDelete, group);
@@ -84,7 +91,7 @@ public class GroupService {
 
     }
 
-
+    @Transactional
     public Set<GroupDto> leaveGroup(Long groupId, String username) {
         var groupToLeave = groupRepository.findById(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + groupId));
@@ -123,5 +130,23 @@ public class GroupService {
         }
     }
 
+    private Map<LocalDate, Set<UserDto>> groupAvailableDays(Set<User> members) {
+        var availabilityList = members.stream()
+                .map(User::getAvailableDays)
+                .toList();
+        return availabilityList.stream()
+                .flatMap(availability -> availability.getAvailableDays().stream()
+                        .map(date -> Map.entry(
+                                date,
+                                manualUserMapper.modelToDtoOnGroupCreate(availability.getUser())
+                                )))
+                .collect(Collectors.groupingBy(
+                        Map.Entry::getKey,
+                        Collectors.mapping(
+                                Map.Entry::getValue,
+                                Collectors.toSet()
+                        )
+                ));
+    }
 
 }

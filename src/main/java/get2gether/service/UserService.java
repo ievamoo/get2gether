@@ -12,6 +12,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,7 @@ public class UserService {
         return userMapper.modelToDto(matchingUser);
     }
 
+    @Transactional
     public UserDto updateCurrentUser(String username, UserDto updatedUserDto) {
         var matchingUser = getUserFromDb(username);
         userMapper.updateUserProfile(updatedUserDto, matchingUser);
@@ -44,6 +46,7 @@ public class UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found:" + username));
     }
 
+    @Transactional
     public void deleteUser(String username) {
         var matchingUser = getUserFromDb(username);
         userRepository.delete(matchingUser);
@@ -55,6 +58,4 @@ public class UserService {
                 .map(userMapper::modelToDto)
                 .toList();
     }
-
-
 }

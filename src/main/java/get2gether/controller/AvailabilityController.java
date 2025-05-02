@@ -6,10 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Set;
 
@@ -20,10 +17,10 @@ public class AvailabilityController {
 
     private final AvailabilityService availabilityService;
 
-//    @PostMapping
-//    public ResponseEntity<Set<AvailabilityDto>> addAvailableDay(Authentication authentication, @RequestBody final AvailabilityDto availabilityDto) {
-//        var user = authentication.getName();
-//        return ResponseEntity.status(HttpStatus.CREATED).body(availabilityService.addAvailableDay(user, availabilityDto));
-//    }
+    @PutMapping
+    public ResponseEntity<AvailabilityDto> addAvailableDays(Authentication authentication, @RequestBody final AvailabilityDto availabilityDto) {
+        var userName = authentication.getName();
+        return ResponseEntity.status(HttpStatus.CREATED).body(availabilityService.addAvailableDay(userName, availabilityDto));
+    }
 
 }
