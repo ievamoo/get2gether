@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -44,6 +45,7 @@ public class AuthService {
         return jwtUtil.generateToken(userDetails);
     }
 
+    @Transactional
     public String registerAndGenerateToken(RegisterRequestDto request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new RegistrationException("Username already exists");

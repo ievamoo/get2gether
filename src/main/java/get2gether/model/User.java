@@ -42,7 +42,8 @@ public class User {
     private List<Role> roles;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
+    @JsonBackReference
+    @EqualsAndHashCode.Exclude
     private Availability availableDays;
 
     @ManyToMany(mappedBy = "members")

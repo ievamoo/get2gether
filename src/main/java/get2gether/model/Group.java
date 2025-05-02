@@ -1,9 +1,9 @@
 package get2gether.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.Accessors;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.List;
@@ -16,6 +16,7 @@ import java.util.Set;
 @Builder
 @Table(name = "groups")
 @DynamicUpdate
+@Accessors(chain = true)
 public class Group {
 
     @Id
@@ -38,9 +39,6 @@ public class Group {
     @JsonManagedReference
     @EqualsAndHashCode.Exclude
     private Set<User> members;
-
-    @Transient
-    private List<Message> messages;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Event> events;
