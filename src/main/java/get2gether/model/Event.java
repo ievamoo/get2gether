@@ -1,15 +1,16 @@
 package get2gether.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @AllArgsConstructor
@@ -17,6 +18,7 @@ import java.util.List;
 @Data
 @Builder
 @DynamicUpdate
+@Accessors(chain = true)
 public class Event {
 
     @Id
@@ -25,7 +27,7 @@ public class Event {
 
     private String name;
 
-    private Long hostId;
+    private String hostUsername;
 
     private LocalDate date;
 
@@ -33,10 +35,6 @@ public class Event {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id")
-    @JsonBackReference
+    @JsonManagedReference
     private Group group;
-
-    //eventas turi/neturi komentaru (chato), jeigu nieks nepapraso
-    @Transient
-    private List<Message> messages;
 }

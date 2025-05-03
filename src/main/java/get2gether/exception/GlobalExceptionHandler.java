@@ -15,16 +15,16 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-
     @ExceptionHandler({
             UsernameNotFoundException.class,
             EntityNotFoundException.class,
             EntityExistsException.class,
             ForbiddenActionException.class,
-            UserNotFoundException.class
+            UserNotFoundException.class,
+            ResourceNotFoundException.class
     })
     public ResponseEntity<Map<String, Object>> handleExceptions(Exception ex) {
-        if (ex instanceof UsernameNotFoundException || ex instanceof EntityNotFoundException) {
+        if (ex instanceof UsernameNotFoundException || ex instanceof EntityNotFoundException || ex instanceof ResourceNotFoundException) {
             return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
         } else if (ex instanceof  EntityExistsException) {
             return createErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);

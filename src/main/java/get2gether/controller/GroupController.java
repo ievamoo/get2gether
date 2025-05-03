@@ -1,5 +1,6 @@
 package get2gether.controller;
 
+import get2gether.dto.EventDto;
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
 import get2gether.service.GroupService;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -21,6 +23,11 @@ public class GroupController {
     @GetMapping("/{groupId}")
     public ResponseEntity<GroupDto> getGroupById(@PathVariable final Long groupId) {
         return ResponseEntity.ok(groupService.getGroupById(groupId));
+    }
+
+    @GetMapping("/{groupId}/events")
+    public ResponseEntity<List<EventDto>> getAllGroupEvents(@PathVariable final Long groupId) {
+        return ResponseEntity.ok(groupService.getAllGroupEvents(groupId));
     }
 
     @PostMapping

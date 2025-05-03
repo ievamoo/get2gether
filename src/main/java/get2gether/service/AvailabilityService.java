@@ -36,8 +36,4 @@ public class AvailabilityService {
         return availabilityRepository.save(manualAvailabilityMapper.dtoToModel(availabilityDto, currentUser));
     }
 
-
-//    public Set<AvailabilityDto> addAvailableDay(String user, AvailabilityDto availabilityDto) {
-//
-//    }
 }

@@ -1,5 +1,6 @@
 package get2gether.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,5 +42,6 @@ public class Group {
     private Set<User> members;
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private List<Event> events;
 }

@@ -16,11 +16,11 @@ import java.util.Set;
 public class AvailabilityController {
 
     private final AvailabilityService availabilityService;
-
     @PutMapping
     public ResponseEntity<AvailabilityDto> addAvailableDays(Authentication authentication, @RequestBody final AvailabilityDto availabilityDto) {
         var userName = authentication.getName();
-        return ResponseEntity.status(HttpStatus.CREATED).body(availabilityService.addAvailableDay(userName, availabilityDto));
+        return ResponseEntity.status(HttpStatus.OK).body(availabilityService.addAvailableDay(userName, availabilityDto));
     }
+
 
 }
