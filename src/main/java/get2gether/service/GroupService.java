@@ -1,9 +1,11 @@
 package get2gether.service;
 
+import get2gether.dto.EventDto;
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.UserNotFoundException;
+import get2gether.manualMapper.ManualEventMapper;
 import get2gether.manualMapper.ManualGroupMapper;
 import get2gether.manualMapper.ManualUserMapper;
 import get2gether.mapper.GroupMapper;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,6 +33,7 @@ public class GroupService {
     private final UserService userService;
     private final ManualGroupMapper manualGroupMapper;
     private final ManualUserMapper manualUserMapper;
+    private final ManualEventMapper manualEventMapper;
 
     public GroupDto getGroupById(Long id) {
         var foundGroup = getGroupByIdFromDb(id);
@@ -107,6 +111,12 @@ public class GroupService {
                 .collect(Collectors.toSet());
     }
 
+    public List<EventDto> getAllGroupEvents(Long groupId) {
+        var group = getGroupByIdFromDb(groupId);
+        return group.getEvents().stream()
+                .map(manualEventMapper::modelToDtoOnGet).toList();
+    }
+
     public void checkIfUserExistsInGroup(Group group, User userToDelete) {
         if (!group.getMembers().contains(userToDelete)) {
             throw new UserNotFoundException("User not found in group with username" + userToDelete.getUsername());
@@ -139,7 +149,7 @@ public class GroupService {
                         .map(date -> Map.entry(
                                 date,
                                 manualUserMapper.modelToDtoOnGroupCreate(availability.getUser())
-                                )))
+                        )))
                 .collect(Collectors.groupingBy(
                         Map.Entry::getKey,
                         Collectors.mapping(

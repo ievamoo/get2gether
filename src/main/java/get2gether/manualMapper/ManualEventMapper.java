@@ -12,7 +12,24 @@ public class ManualEventMapper {
                 .id(event.getId())
                 .name(event.getName())
                 .description(event.getDescription())
+                .hostUsername(event.getHostUsername())
+                .groupId(event.getGroup().getId())
                 .date(event.getDate())
                 .build();
     }
+
+    public Event dtoToModel(EventDto dto) {
+       return Event.builder()
+               .name(dto.getName())
+               .date(dto.getDate())
+               .description(dto.getDescription())
+               .build();
+    }
+
+    public void updateEvent(EventDto dto, Event event) {
+        event.setDate(dto.getDate());
+        event.setName(dto.getName());
+        event.setDescription(dto.getDescription());
+    }
+
 }

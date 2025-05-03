@@ -15,9 +15,9 @@ import java.util.List;
 public class EventDto {
     private Long id;
     private String name;
-    private Long hostId;
+    private String hostUsername;
     private LocalDate date;
     private String description;
-    private GroupDto group;
+    private Long groupId;
     private List<MessageDto> messages;
 }
