@@ -4,8 +4,7 @@ import get2gether.dto.EventDto;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.manualMapper.ManualEventMapper;
-import get2gether.model.Event;
-import get2gether.model.ResourceType;
+import get2gether.model.*;
 import get2gether.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,11 +17,14 @@ public class EventService {
     private final EventRepository eventRepository;
     private final GroupService groupService;
     private final ManualEventMapper manualEventMapper;
+    private final InviteService inviteService;
 
     @Transactional
     public EventDto createEvent(EventDto eventDto, String username) {
         var group = groupService.getGroupByIdFromDb(eventDto.getGroupId());
         var event = manualEventMapper.dtoToModel(eventDto);
+        group.getMembers().forEach(user -> user.getInvitesReceived()
+                .add(inviteService.createInvite(Type.EVENT, event.getId(), username, user, event.getName())));
         event.setGroup(group).setHostUsername(username);
         var savedEvent = eventRepository.save(event);
         return manualEventMapper.modelToDtoOnGet(savedEvent);

@@ -9,9 +9,6 @@ import org.hibernate.annotations.DynamicUpdate;
 import java.util.List;
 import java.util.Set;
 
-//TODO change roles to a single role (change everything else accordingly)
-//TODO change user to have only username (nickname) and email
-
 @Data
 @Builder
 @NoArgsConstructor

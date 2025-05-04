@@ -9,12 +9,17 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ManualUserMapper {
 
+    private final ManualInviteMapper manualInviteMapper;
+
     public UserDto modelToDtoOnGroupCreate(User user) {
         return UserDto.builder()
                 .id(user.getId())
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
+                .invitesReceivedDto(user.getInvitesReceived().stream()
+                        .map(manualInviteMapper::modelToDto)
+                        .toList())
                 .build();
     }
 

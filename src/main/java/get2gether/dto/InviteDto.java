@@ -15,7 +15,8 @@ public class InviteDto {
     private Long id;
     private Type type;
     private Long typeId;
-    private Long senderId;
-    private UserDto receiver;
+    private String typeName;
+    private String senderUsername;
+    private String receiverUsername;
     private InviteStatus status;
 }

@@ -21,6 +21,4 @@ public class AvailabilityController {
         var userName = authentication.getName();
         return ResponseEntity.status(HttpStatus.OK).body(availabilityService.addAvailableDay(userName, availabilityDto));
     }
-
-
 }
