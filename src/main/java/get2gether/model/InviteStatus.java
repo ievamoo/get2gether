@@ -2,5 +2,6 @@ package get2gether.model;
 
 public enum InviteStatus {
     ACCEPTED,
-    REJECTED
+    REJECTED,
+    PENDING
 }

@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
@@ -13,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@Accessors(chain = true)
 public class Invite {
 
     @Id
@@ -24,7 +26,9 @@ public class Invite {
 
     private Long typeId;
 
-    private Long senderId;
+    private String typeName;
+
+    private String senderUsername;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id")

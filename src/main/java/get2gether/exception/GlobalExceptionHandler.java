@@ -1,9 +1,9 @@
 package get2gether.exception;
 
-import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,23 +15,22 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({
-            UsernameNotFoundException.class,
-            EntityNotFoundException.class,
-            EntityExistsException.class,
-            ForbiddenActionException.class,
-            UserNotFoundException.class,
-            ResourceNotFoundException.class
-    })
-    public ResponseEntity<Map<String, Object>> handleExceptions(Exception ex) {
-        if (ex instanceof UsernameNotFoundException || ex instanceof EntityNotFoundException || ex instanceof ResourceNotFoundException) {
-            return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
-        } else if (ex instanceof  EntityExistsException) {
-            return createErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
-        } else if (ex instanceof ForbiddenActionException) {
-            return createErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN);
-        }
-        return ResponseEntity.internalServerError().build();
+    @ExceptionHandler(
+            {UsernameNotFoundException.class,
+            ResourceNotFoundException.class}
+    )
+    public ResponseEntity<Map<String, Object>> handleNotFound(Exception ex) {
+        return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleEntityNotFound(Exception ex) {
+        return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
+        return createErrorResponse("Invalid username or password", HttpStatus.UNAUTHORIZED);
     }
 
     private ResponseEntity<Map<String, Object>> createErrorResponse(String message, HttpStatus status) {

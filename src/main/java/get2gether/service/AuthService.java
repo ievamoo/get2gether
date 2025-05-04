@@ -2,16 +2,17 @@ package get2gether.service;
 
 import get2gether.dto.RegisterRequestDto;
 import get2gether.exception.RegistrationException;
+import get2gether.exception.ResourceNotFoundException;
+import get2gether.model.ResourceType;
 import get2gether.model.Role;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
 import get2gether.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,17 +31,11 @@ public class AuthService {
 
     public String authenticateAndGenerateToken(String username, String password) {
         if (!userRepository.existsByUsername(username)) {
-            throw new UsernameNotFoundException("User not found with username: " + username);
+            throw new ResourceNotFoundException(ResourceType.USER, "username: " + username);
         }
-
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(username, password)
-            );
-        } catch (BadCredentialsException ex) {
-            throw new BadCredentialsException("Invalid username or password");
-        }
-
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+        );
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         return jwtUtil.generateToken(userDetails);
     }
@@ -52,7 +47,8 @@ public class AuthService {
         }
         var user = createUser(request);
         userRepository.save(user);
-        return generateToken(user.getUsername());
+        return jwtUtil.generateToken(buildUserDetails(user));
+
     }
 
     private User createUser(RegisterRequestDto request) {
@@ -65,8 +61,22 @@ public class AuthService {
                 .build();
     }
 
-    private String generateToken(String username) {
-        var userDetails = userDetailsService.loadUserByUsername(username);
-        return jwtUtil.generateToken(userDetails);
+//    private String generateToken(String username) {
+//        var userDetails = userDetailsService.loadUserByUsername(username);
+//        return jwtUtil.generateToken(userDetails);
+//    }
+
+    private UserDetails buildUserDetails(User user) {
+        return org.springframework.security.core.userdetails.User
+                .withUsername(user.getUsername())
+                .password(user.getPassword())
+                .authorities(user.getRoles().stream()
+                        .map(role -> new SimpleGrantedAuthority(role.name()))
+                        .toList())
+                .accountExpired(false)
+                .accountLocked(false)
+                .credentialsExpired(false)
+                .disabled(false)
+                .build();
     }
 }

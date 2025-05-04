@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -143,6 +144,7 @@ public class GroupService {
     private Map<LocalDate, Set<UserDto>> groupAvailableDays(Set<User> members) {
         var availabilityList = members.stream()
                 .map(User::getAvailableDays)
+                .filter(Objects::nonNull)
                 .toList();
         return availabilityList.stream()
                 .flatMap(availability -> availability.getAvailableDays().stream()
