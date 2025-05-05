@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 public class ManualUserMapper {
 
     private final ManualInviteMapper manualInviteMapper;
-    private final ManualAvailabilityMapper manualAvailabilityMapper;
     private final ManualEventMapper manualEventMapper;
 
     public UserDto modelToDtoOnGroupCreate(User user) {
@@ -35,7 +34,7 @@ public class ManualUserMapper {
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-//                .availableDays(manualAvailabilityMapper.modelToDto(user.getAvailableDays()))
+                .availableDays(user.getAvailableDays())
                 .groups(user.getGroups().stream()
                         .map(group -> GroupDto.builder()
                                 .id(group.getId())

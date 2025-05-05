@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -17,7 +18,7 @@ public class UserDto {
     private String username;
     private String firstName;
     private String lastName;
-    private AvailabilityDto availableDays;
+    private Set<LocalDate> availableDays;
     private Set<GroupDto> groups;
     private List<InviteDto> invitesReceivedDto;
 }

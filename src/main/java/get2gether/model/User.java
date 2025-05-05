@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -38,10 +39,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     private List<Role> roles;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonBackReference
-    @EqualsAndHashCode.Exclude
-    private Availability availableDays;
+//    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JsonBackReference
+//    @EqualsAndHashCode.Exclude
+//    private Availability availableDays;
 
     @ManyToMany(mappedBy = "members")
     @JsonBackReference
@@ -50,5 +51,10 @@ public class User {
 
     @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Invite> invitesReceived;
+
+    @ElementCollection
+    @CollectionTable(name = "availability_days", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "available_day")
+    private Set<LocalDate> availableDays;
 
 }
