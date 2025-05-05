@@ -142,15 +142,11 @@ public class GroupService {
     }
 
     private Map<LocalDate, Set<UserDto>> groupAvailableDays(Set<User> members) {
-        var availabilityList = members.stream()
-                .map(User::getAvailableDays)
-                .filter(Objects::nonNull)
-                .toList();
-        return availabilityList.stream()
-                .flatMap(availability -> availability.getAvailableDays().stream()
+        return members.stream()
+                .flatMap(member -> member.getAvailableDays().stream()
                         .map(date -> Map.entry(
                                 date,
-                                manualUserMapper.modelToDtoOnGroupCreate(availability.getUser())
+                                manualUserMapper.modelToDtoOnGroupCreate(member)
                         )))
                 .collect(Collectors.groupingBy(
                         Map.Entry::getKey,

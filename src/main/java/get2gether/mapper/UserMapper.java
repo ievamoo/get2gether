@@ -12,16 +12,14 @@ import org.mapstruct.Named;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring", uses = {AvailabilityMapper.class})
+@Mapper(componentModel = "spring")
 public interface UserMapper {
 
     @Named("modelToDto")
-    @Mapping(source = "availableDays", target = "availableDays", qualifiedByName = "modelToDto")
     @Mapping(source = "groups", target = "groups", qualifiedByName = "mapToGroupDto")
     UserDto modelToDto(User user);
 
     @Named("dtoToModel")
-    @Mapping(source = "availableDays", target = "availableDays", qualifiedByName = "dtoToModel")
     @Mapping(source = "groups", target = "groups", qualifiedByName = "mapToGroup")
     User dtoToModel(UserDto dto);
 

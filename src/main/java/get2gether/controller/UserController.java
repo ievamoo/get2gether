@@ -1,15 +1,18 @@
 package get2gether.controller;
 
+import get2gether.dto.AvailabilityDto;
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
 import get2gether.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -41,7 +44,19 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/availability")
+    public ResponseEntity<Set<LocalDate>> setAvailableDays(Authentication authentication, @RequestBody final Set<LocalDate> availableDays) {
+        var userName = authentication.getName();
+        var updatedDates = userService.updateAvailableDays(userName, availableDays);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedDates);
+    }
 
+    @GetMapping("/availability")
+    public ResponseEntity<Set<LocalDate>> getAvailableDays(Authentication authentication) {
+        var userName = authentication.getName();
+        var availableDays = userService.getAvailableDays(userName);
+        return ResponseEntity.status(HttpStatus.OK).body(availableDays);
+    }
 
     @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/all")

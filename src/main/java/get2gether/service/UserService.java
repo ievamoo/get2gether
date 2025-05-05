@@ -2,6 +2,8 @@ package get2gether.service;
 
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
+import get2gether.exception.ForbiddenActionException;
+import get2gether.exception.ResourceNotFoundException;
 import get2gether.exception.UserNotFoundException;
 import get2gether.manualMapper.ManualGroupMapper;
 import get2gether.manualMapper.ManualUserMapper;
@@ -11,10 +13,12 @@ import get2gether.repository.UserRepository;
 import get2gether.mapper.UserMapper;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,6 +56,11 @@ public class UserService {
     @Transactional
     public void deleteUser(String username) {
         var matchingUser = getUserFromDb(username);
+        boolean isAdminOfAnyGroup = matchingUser.getGroups().stream()
+                .anyMatch(group -> group.getAdmin().getUsername().equals(username));
+        if (isAdminOfAnyGroup) {
+            throw new ForbiddenActionException("Cannot delete user: they are the admin of one or more groups.");
+        }
         userRepository.delete(matchingUser);
     }
 
@@ -60,5 +69,17 @@ public class UserService {
         return users.stream()
                 .map(userMapper::modelToDto)
                 .toList();
+    }
+
+    public Set<LocalDate> updateAvailableDays(String userName, Set<LocalDate> availableDays) {
+        var matchingUser = getUserFromDb(userName);
+        matchingUser.setAvailableDays(availableDays);
+        var updatedUser = userRepository.save(matchingUser);
+        return updatedUser.getAvailableDays();
+    }
+
+    public Set<LocalDate> getAvailableDays(String userName) {
+        var matchingUser = getUserFromDb(userName);
+        return matchingUser.getAvailableDays();
     }
 }
