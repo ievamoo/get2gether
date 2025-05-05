@@ -21,3 +21,4 @@ public class UserDto {
     private Set<GroupDto> groups;
     private List<InviteDto> invitesReceivedDto;
 }
+
