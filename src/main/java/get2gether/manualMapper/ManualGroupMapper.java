@@ -52,4 +52,14 @@ public class ManualGroupMapper {
                 .name(group.getName())
                 .build();
     }
+
+    public GroupDto modelToDtoOnGetUser(Group group) {
+        return GroupDto.builder()
+                .id(group.getId())
+                .name(group.getName())
+                .events(group.getEvents().stream()
+                        .map(manualEventMapper::modelToDtoOnGet)
+                        .collect(Collectors.toList()))
+                .build();
+    }
 }

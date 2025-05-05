@@ -32,7 +32,8 @@ public class UserService {
 
     public UserDto getUserByUsername(String username) {
         var matchingUser = getUserFromDb(username);
-        return manualUserMapper.modelToDtoOnGroupCreate(matchingUser);
+//        manualUserMapper.modelToDtoOnGroupCreate(matchingUser);
+        return manualUserMapper.modelToDtoOnGetUser(matchingUser);
     }
 
     @Transactional
