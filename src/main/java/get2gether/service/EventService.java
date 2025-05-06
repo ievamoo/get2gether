@@ -1,32 +1,36 @@
 package get2gether.service;
 
 import get2gether.dto.EventDto;
+import get2gether.event.EventCreatedEvent;
+import get2gether.event.EventPublisher;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.manualMapper.ManualEventMapper;
 import get2gether.model.*;
 import get2gether.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EventService {
 
     private final EventRepository eventRepository;
     private final GroupService groupService;
     private final ManualEventMapper manualEventMapper;
-    private final InviteService inviteService;
+    private final EventPublisher eventPublisher;
 
     @Transactional
     public EventDto createEvent(EventDto eventDto, String username) {
         var group = groupService.getGroupByIdFromDb(eventDto.getGroupId());
         var event = manualEventMapper.dtoToModel(eventDto);
-        group.getMembers().forEach(user -> user.getInvitesReceived()
-                .add(inviteService.createInvite(Type.EVENT, event.getId(), username, user, event.getName())));
         event.setGroup(group).setHostUsername(username);
         var savedEvent = eventRepository.save(event);
+        eventPublisher.publishEventCreatedEvent(new EventCreatedEvent(this, savedEvent));
+//        event.setGroup(group).setHostUsername(username);
         return manualEventMapper.modelToDtoOnGet(savedEvent);
     }
 
@@ -46,7 +50,7 @@ public class EventService {
         eventRepository.deleteById(eventId);
     }
 
-    private Event getEventByIdFromDb(Long eventId) {
+    public Event getEventByIdFromDb(Long eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException(ResourceType.EVENT, "id: " + eventId));
     }
@@ -56,4 +60,21 @@ public class EventService {
             throw new ForbiddenActionException("You are not allowed to edit Event details.");
         }
     }
+
+    public void addToEvent(Long typeId, User user) {
+        var event = getEventByIdFromDb(typeId);
+        user.getGoingEvents().add(event);
+        event.getGoingMembers().add(user);
+        eventRepository.save(event);
+        log.info("[EventService]: added {} to event", user.getUsername());
+    }
+
+    public void removeFromEvent(Long typeId, User receiver) {
+        var event = getEventByIdFromDb(typeId);
+        event.getGoingMembers().remove(receiver);
+        receiver.getGoingEvents().remove(event);
+        eventRepository.save(event);
+        log.info("[EventService]: removed {} to event", receiver.getUsername());
+    }
+
 }

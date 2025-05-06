@@ -1,15 +1,15 @@
 package get2gether.controller;
 
 import get2gether.dto.InviteDto;
+import get2gether.model.Invite;
 import get2gether.service.InviteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/invites")
@@ -20,9 +20,16 @@ public class InviteController {
 
     @PostMapping
     ResponseEntity<String> createInvite(Authentication authentication, @RequestBody final InviteDto inviteDto) {
-        var user = authentication.getName();
-        var inviteResponse = inviteService.createNewInvite(inviteDto, user);
+        var username = authentication.getName();
+        var inviteResponse = inviteService.createNewInvite(inviteDto, username);
         return ResponseEntity.status(HttpStatus.CREATED).body(inviteResponse);
+    }
+
+    @PatchMapping("/{inviteId}")
+    ResponseEntity<Void> changeInviteStatus(Authentication authentication, @PathVariable final Long inviteId, @RequestBody final String updatedStatus) {
+        var username = authentication.getName();
+        inviteService.changeInviteStatus(username, inviteId, updatedStatus);
+        return ResponseEntity.accepted().build();
     }
 
 }

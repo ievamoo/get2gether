@@ -28,6 +28,11 @@ public class GlobalExceptionHandler {
         return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleResourceAlreadyExists(Exception ex) {
+        return createErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(ForbiddenActionException.class)
     public ResponseEntity<Map<String, Object>> handleForbidden(ForbiddenActionException ex) {
         return createErrorResponse(ex.getMessage(), HttpStatus.FORBIDDEN);

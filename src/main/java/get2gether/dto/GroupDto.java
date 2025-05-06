@@ -24,4 +24,5 @@ public class GroupDto {
     private Map<LocalDate, Set<UserDto>> groupAvailability;
     private List<EventDto> events;
     private List<MessageDto> messages;
+    private String groupColor;
 }

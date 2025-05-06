@@ -4,17 +4,21 @@ import get2gether.dto.EventDto;
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
 import get2gether.exception.ForbiddenActionException;
+import get2gether.exception.ResourceAlreadyExistsException;
+import get2gether.exception.ResourceNotFoundException;
 import get2gether.exception.UserNotFoundException;
 import get2gether.manualMapper.ManualEventMapper;
 import get2gether.manualMapper.ManualGroupMapper;
 import get2gether.manualMapper.ManualUserMapper;
 import get2gether.mapper.GroupMapper;
 import get2gether.model.Group;
+import get2gether.model.ResourceType;
 import get2gether.model.User;
 import get2gether.repository.GroupRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +31,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GroupService {
 
     private final GroupRepository groupRepository;
@@ -48,8 +53,7 @@ public class GroupService {
             throw new EntityExistsException("Group already exists by name: " + groupDto.getName());
         }
         var currentUser = userService.getUserFromDb(username);
-        var group = groupMapper.dtoToModelOnGroupCreate(groupDto)
-                .setMembers(Set.of(currentUser)).setAdmin(currentUser);
+        var group = manualGroupMapper.dtoToModelOnGroupCreate(groupDto, currentUser);
         var savedGroup = groupRepository.save(group);
         return manualGroupMapper.modelToDtoOnGroupCreate(savedGroup);
     }
@@ -68,18 +72,16 @@ public class GroupService {
         groupRepository.deleteById(id);
     }
 
+
     @Transactional
-    public Set<UserDto> addMember(Long id, UserDto userDto) {
-        var group = getGroupByIdFromDb(id);
-        var user = userService.getUserFromDb(userDto.getUsername());
-        if (group.getMembers().contains(user)) {
-            throw new EntityExistsException("User already exists in this group: " + userDto.getUsername());
+    public void addMember(Long groupId, User receiver) {
+        var group = getGroupByIdFromDb(groupId);
+        if (group.getMembers().contains(receiver)) {
+            throw new ResourceAlreadyExistsException(ResourceType.USER,  "username: " + receiver.getUsername());
         }
-        group.getMembers().add(user);
-        var savedGroup = groupRepository.save(group);
-        return savedGroup.getMembers().stream()
-                .map(manualUserMapper::modelToDtoOnGroupCreate)
-                .collect(Collectors.toSet());
+        group.getMembers().add(receiver);
+        groupRepository.save(group);
+        log.info("[GroupService]: adding {} to the group", receiver.getUsername());
     }
 
     @Transactional
@@ -128,6 +130,7 @@ public class GroupService {
         return groupRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found by id: " + id));
     }
+
 
     private void checkIfActionAllowed(String username, Group group) {
         if (!group.getAdmin().getUsername().equals(username)) {

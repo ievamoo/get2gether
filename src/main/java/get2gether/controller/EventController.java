@@ -18,7 +18,8 @@ public class EventController {
     @PostMapping
     public ResponseEntity<EventDto> createEvent(Authentication authentication, @RequestBody final EventDto eventDto ) {
         var username = authentication.getName();
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(eventDto, username));
+        var createdEvent = eventService.createEvent(eventDto, username);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdEvent);
     }
 
     @PatchMapping("/{eventId}")

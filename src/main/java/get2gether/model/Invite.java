@@ -21,13 +21,17 @@ public class Invite {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Type type;
 
+    @Column(nullable = false)
     private Long typeId;
 
+    @Column(nullable = false)
     private String typeName;
 
+    @Column(nullable = false)
     private String senderUsername;
 
     @ManyToOne(fetch = FetchType.LAZY)
