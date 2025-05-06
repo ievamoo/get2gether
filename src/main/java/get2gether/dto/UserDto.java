@@ -20,6 +20,6 @@ public class UserDto {
     private String lastName;
     private Set<LocalDate> availableDays;
     private Set<GroupDto> groups;
-    private List<InviteDto> invitesReceivedDto;
+    private List<InviteDto> invitesReceived;
 }
 

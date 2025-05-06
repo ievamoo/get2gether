@@ -2,6 +2,7 @@ package get2gether.manualMapper;
 
 import get2gether.dto.EventDto;
 import get2gether.model.Event;
+import get2gether.model.Group;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,5 +32,4 @@ public class ManualEventMapper {
         event.setName(dto.getName());
         event.setDescription(dto.getDescription());
     }
-
 }

@@ -9,6 +9,7 @@ import lombok.experimental.Accessors;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -23,4 +24,5 @@ public class EventDto {
     private String description;
     private Long groupId;
     private List<MessageDto> messages;
+    private Set<UserDto> goingMembers;
 }

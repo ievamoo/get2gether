@@ -2,9 +2,11 @@ package get2gether.manualMapper;
 
 import get2gether.dto.GroupDto;
 import get2gether.model.Group;
+import get2gether.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +24,7 @@ public class ManualGroupMapper {
                 .members(group.getMembers().stream()
                         .map(userMapper::modelToDtoOnGroupCreate)
                         .collect(Collectors.toSet()))
+                .groupColor(group.getGroupColor())
                 .build();
     }
 
@@ -36,6 +39,7 @@ public class ManualGroupMapper {
                 .events(group.getEvents().stream()
                         .map(manualEventMapper::modelToDtoOnGet)
                         .toList())
+                .groupColor(group.getGroupColor())
                 .build();
 
     }
@@ -43,6 +47,7 @@ public class ManualGroupMapper {
     public GroupDto modelToDtoOnUpdate(Group group) {
         return GroupDto.builder()
                 .name(group.getName())
+                .groupColor(group.getGroupColor())
                 .build();
     }
 
@@ -60,6 +65,15 @@ public class ManualGroupMapper {
                 .events(group.getEvents().stream()
                         .map(manualEventMapper::modelToDtoOnGet)
                         .collect(Collectors.toList()))
+                .build();
+    }
+
+    public Group dtoToModelOnGroupCreate(GroupDto dto, User user) {
+        return Group.builder()
+                .name(dto.getName())
+                .admin(user)
+                .members(Set.of(user))
+                .groupColor(dto.getGroupColor())
                 .build();
     }
 }

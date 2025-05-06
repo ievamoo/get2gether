@@ -57,4 +57,9 @@ public class User {
     @Column(name = "available_day")
     private Set<LocalDate> availableDays;
 
+    @ManyToMany(mappedBy = "goingMembers")
+    @JsonBackReference
+    @EqualsAndHashCode.Exclude
+    private Set<Event> goingEvents;
+
 }
