@@ -1,9 +1,7 @@
 package get2gether.event.listener;
 
 import get2gether.event.InviteStatusChangedEvent;
-import get2gether.exception.ForbiddenActionException;
 import get2gether.model.Invite;
-import get2gether.model.InviteStatus;
 import get2gether.model.User;
 import get2gether.repository.InviteRepository;
 import get2gether.service.EventService;
@@ -12,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -26,51 +22,35 @@ public class InviteStatusListener {
 
 
     @EventListener
-    public void handleInviteStatusChange(InviteStatusChangedEvent event) {
+    public void handleInviteResponse(InviteStatusChangedEvent event) {
         var invite = event.getUpdatedInvite();
         var receiver = invite.getReceiver();
-        log.info("[InviteStatusListener]: handling {} invite status change..", invite.getType());
+        var accepted = event.getAccepted();
+        System.out.println(accepted);
+        log.info("[InviteStatusListener]: handling {} invite response..", invite.getType());
         switch (invite.getType()) {
-            case GROUP ->   handleGroupInviteStatusChange(invite, receiver);
-            case EVENT -> handleEventInviteStatusChange(invite, receiver);
+            case GROUP -> handleGroupInviteResponse(accepted, receiver, invite);
+            case EVENT -> handleEventInviteResponse(accepted, invite, receiver);
+            default -> log.warn("[InviteStatusListener]: Unknown invite type: {}", invite.getType());
         }
     }
 
-    private void handleEventInviteStatusChange(Invite invite, User receiver) {
-        switch (invite.getStatus()) {
-            case ACCEPTED ->  eventService.addToEvent(invite.getTypeId(), receiver);
-            case REJECTED -> {
-                eventService.removeFromEvent(invite.getTypeId(), receiver);
-                deleteInvite(invite);
-            }
-            default -> log.warn("[InviteStatusListener]: Unexpected status for group invite: {}", invite.getStatus());
+    private void handleEventInviteResponse(Boolean accepted, Invite invite, User receiver) {
+        if (!accepted) {
+            eventService.removeUserFromEvent(invite.getTypeId(), receiver);
+            log.info("[InviteStatusListener]: User {} declined event {}", receiver.getUsername(), invite.getTypeId());
+            return;
         }
-
-        if (invite.getStatus() != InviteStatus.ACCEPTED) {
-            throw new ForbiddenActionException("Invalid status" + invite.getStatus());
-        }
+        eventService.addUserToEvent(invite.getTypeId(), receiver);
+        log.info("[InviteStatusListener]: User {} marked as going to event {}", receiver.getUsername(), invite.getTypeId());
     }
 
-
-
-    //TODO isitikinti, kad tikrai issitrina abipusiai
-
-    private void handleGroupInviteStatusChange(Invite invite, User receiver) {
-        switch (invite.getStatus()) {
-            case ACCEPTED -> handleAcceptedGroupInvite(invite, receiver);
-            case REJECTED -> deleteInvite(invite);
-            default -> log.warn("[InviteStatusListener]: Unexpected status for group invite: {}", invite.getStatus());
+    private void handleGroupInviteResponse(Boolean accepted, User receiver, Invite invite) {
+        if (!accepted) {
+            log.info("[InviteStatusListener]: Group invite rejected by user {}", receiver.getUsername());
+            return;
         }
-    }
-
-    private void handleAcceptedGroupInvite(Invite invite, User receiver) {
         groupService.addMember(invite.getTypeId(), receiver);
-        deleteInvite(invite);
+        log.info("[InviteStatusListener]: User {} added to group {}", receiver.getUsername(), invite.getTypeId());
     }
-
-    private void deleteInvite(Invite invite) {
-        inviteRepository.delete(invite);
-        log.info("[InviteStatusListener]: Invite (id: {}) deleted.", invite.getId());
-    }
-
 }

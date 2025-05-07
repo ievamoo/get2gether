@@ -26,10 +26,14 @@ public class InviteController {
     }
 
     @PatchMapping("/{inviteId}")
-    ResponseEntity<Void> changeInviteStatus(Authentication authentication, @PathVariable final Long inviteId, @RequestBody final String updatedStatus) {
+    public ResponseEntity<Void> respondToInvite(
+            Authentication authentication,
+            @PathVariable Long inviteId,
+            @RequestBody InviteDto inviteDto
+    ) {
         var username = authentication.getName();
-        inviteService.changeInviteStatus(username, inviteId, updatedStatus);
-        return ResponseEntity.accepted().build();
+        inviteService.handleInviteResponse(username, inviteId, inviteDto.getAccepted());
+        return ResponseEntity.ok().build();
     }
 
 }

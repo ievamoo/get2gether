@@ -22,9 +22,9 @@ public class ManualUserMapper {
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .invitesReceived(user.getInvitesReceived().stream()
-                        .map(manualInviteMapper::modelToDto)
-                        .toList())
+//                .invitesReceived(user.getInvitesReceived().stream()
+//                        .map(manualInviteMapper::modelToDto)
+//                        .toList())
                 .build();
     }
 
@@ -48,6 +48,9 @@ public class ManualUserMapper {
                 .invitesReceived(user.getInvitesReceived().stream()
                         .map(manualInviteMapper::modelToDto)
                         .toList())
+                .goingEvents(user.getGoingEvents().stream().map(
+                        manualEventMapper::modelToDtoOnGet
+                ).collect(Collectors.toList()))
                 .build();
     }
 

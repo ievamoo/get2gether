@@ -22,7 +22,7 @@ public class EventDto {
     private String hostUsername;
     private LocalDate date;
     private String description;
-    private Long groupId;
+    private String groupName;
     private List<MessageDto> messages;
     private Set<UserDto> goingMembers;
 }
