@@ -9,6 +9,7 @@ import get2gether.manualMapper.ManualInviteMapper;
 import get2gether.model.*;
 import get2gether.repository.InviteRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,7 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class InviteService {
 
     private final InviteRepository inviteRepository;
@@ -77,13 +79,13 @@ public class InviteService {
 //                });
     }
 
-    public void changeInviteStatus(String username, Long inviteId, String updatedStatus) {
+    public void handleInviteResponse(String username, Long inviteId, boolean accepted) {
         var user = userService.getUserFromDb(username);
         var existingInvite = getInvite(inviteId, user);
-
-        existingInvite.setStatus(InviteStatus.valueOf(updatedStatus));
-        var  updatedInvite = inviteRepository.save(existingInvite);
-        eventPublisher.publishInviteStatusChangedEvent(new InviteStatusChangedEvent(this, updatedInvite));
+        user.getInvitesReceived().remove(existingInvite);
+        inviteRepository.delete(existingInvite);
+        log.info("Invite deleted: {}", existingInvite.getId());
+        eventPublisher.publishInviteStatusChangedEvent(new InviteStatusChangedEvent(this, existingInvite, accepted));
     }
 
     private Invite getInvite(Long inviteId, User user) {

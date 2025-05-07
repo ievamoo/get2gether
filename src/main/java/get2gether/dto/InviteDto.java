@@ -1,11 +1,12 @@
 package get2gether.dto;
 
-import get2gether.model.InviteStatus;
 import get2gether.model.Type;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -16,7 +17,9 @@ public class InviteDto {
     private Type type;
     private Long typeId;
     private String typeName;
+    private String groupName;
+    private LocalDate eventDate;
     private String senderUsername;
     private String receiverUsername;
-    private InviteStatus status;
+    private Boolean accepted;
 }

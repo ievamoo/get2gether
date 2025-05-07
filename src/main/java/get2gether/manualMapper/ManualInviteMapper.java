@@ -1,21 +1,30 @@
 package get2gether.manualMapper;
 
 import get2gether.dto.InviteDto;
-import get2gether.model.Invite;
-import get2gether.model.InviteStatus;
-import get2gether.model.User;
+import get2gether.exception.ResourceNotFoundException;
+import get2gether.model.*;
+import get2gether.repository.EventRepository;
+import get2gether.repository.GroupRepository;
+import get2gether.repository.InviteRepository;
+import get2gether.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Service
+@RequiredArgsConstructor
 public class ManualInviteMapper {
+
+    private final UserRepository userRepository;
+    private final EventRepository eventRepository;
 
     public Invite dtoToModel(InviteDto dto, User receiver, User sender, String typeName) {
         return Invite.builder()
                 .type(dto.getType())
                 .typeId(dto.getTypeId())
-                .senderUsername(String.format("%s %s", sender.getFirstName(), sender.getLastName()) )
+                .senderUsername(sender.getUsername())
                 .typeName(typeName)
-                .status(InviteStatus.PENDING)
                 .receiver(receiver)
                 .build();
     }
@@ -25,10 +34,33 @@ public class ManualInviteMapper {
                 .id(invite.getId())
                 .type(invite.getType())
                 .typeId(invite.getTypeId())
-                .status(invite.getStatus())
-                .senderUsername(invite.getSenderUsername())
                 .typeName(invite.getTypeName())
+                .senderUsername(formatSender(invite.getSenderUsername()))
+                .groupName(invite.getType() == Type.EVENT ? getGroupName(invite.getTypeId()) : null)
+                .eventDate(invite.getType() == Type.EVENT ? getEventDate(invite.getTypeId()) : null)
                 .build();
     }
+
+    private String formatSender(String senderName) {
+        var user = userRepository.findByUsername(senderName).orElseThrow(
+                () -> new ResourceNotFoundException(ResourceType.USER, "username:" + senderName));
+        return String.format("%s %s", user.getFirstName(), user.getLastName());
+    }
+
+    private String getGroupName(Long eventId) {
+        var event = getEvent(eventId);
+        return event.getGroup().getName();
+    }
+
+    private LocalDate getEventDate(Long eventId) {
+        var event = getEvent(eventId);
+        return event.getDate();
+    }
+
+    private Event getEvent(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException(ResourceType.EVENT, "id: " + eventId));
+    }
+
 
 }

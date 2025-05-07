@@ -39,11 +39,6 @@ public class User {
     @Enumerated(EnumType.STRING)
     private List<Role> roles;
 
-//    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JsonBackReference
-//    @EqualsAndHashCode.Exclude
-//    private Availability availableDays;
-
     @ManyToMany(mappedBy = "members")
     @JsonBackReference
     @EqualsAndHashCode.Exclude
@@ -60,6 +55,6 @@ public class User {
     @ManyToMany(mappedBy = "goingMembers")
     @JsonBackReference
     @EqualsAndHashCode.Exclude
-    private Set<Event> goingEvents;
+    private List<Event> goingEvents;
 
 }

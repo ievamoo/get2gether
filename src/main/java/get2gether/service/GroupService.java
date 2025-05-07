@@ -50,7 +50,7 @@ public class GroupService {
     @Transactional
     public GroupDto createGroup(String username, GroupDto groupDto) {
         if (groupRepository.existsByName(groupDto.getName())) {
-            throw new EntityExistsException("Group already exists by name: " + groupDto.getName());
+            throw new ResourceAlreadyExistsException(ResourceType.GROUP, "name: " + groupDto.getName());
         }
         var currentUser = userService.getUserFromDb(username);
         var group = manualGroupMapper.dtoToModelOnGroupCreate(groupDto, currentUser);
@@ -72,13 +72,13 @@ public class GroupService {
         groupRepository.deleteById(id);
     }
 
-
     @Transactional
     public void addMember(Long groupId, User receiver) {
         var group = getGroupByIdFromDb(groupId);
         if (group.getMembers().contains(receiver)) {
             throw new ResourceAlreadyExistsException(ResourceType.USER,  "username: " + receiver.getUsername());
         }
+        receiver.getGroups().add(group);
         group.getMembers().add(receiver);
         groupRepository.save(group);
         log.info("[GroupService]: adding {} to the group", receiver.getUsername());
@@ -158,6 +158,11 @@ public class GroupService {
                                 Collectors.toSet()
                         )
                 ));
+    }
+
+    public Group findByName(String groupName) {
+        return groupRepository.findByName(groupName)
+                .orElseThrow(() -> new ResourceNotFoundException(ResourceType.GROUP, "name: " + groupName));
     }
 
 }

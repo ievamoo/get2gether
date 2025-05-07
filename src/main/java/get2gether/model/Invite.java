@@ -38,7 +38,4 @@ public class Invite {
     @JoinColumn(name = "receiver_id")
     private User receiver;
 
-    @Enumerated(EnumType.STRING)
-    private InviteStatus status;
-
 }

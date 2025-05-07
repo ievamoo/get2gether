@@ -2,11 +2,9 @@ package get2gether.event.listener;
 
 import get2gether.event.EventCreatedEvent;
 import get2gether.model.Invite;
-import get2gether.model.InviteStatus;
 import get2gether.model.Type;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
-import get2gether.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -36,7 +34,6 @@ public class EventCreationListener {
                 .typeName(typeName)
                 .senderUsername(senderUsername)
                 .receiver(receiver)
-                .status(InviteStatus.PENDING)
                 .build();
     }
 

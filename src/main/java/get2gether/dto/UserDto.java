@@ -21,5 +21,6 @@ public class UserDto {
     private Set<LocalDate> availableDays;
     private Set<GroupDto> groups;
     private List<InviteDto> invitesReceived;
+    private List<EventDto> goingEvents;
 }
 
