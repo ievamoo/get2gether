@@ -58,7 +58,6 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(availableDays);
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<List<UserDto>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());

@@ -6,15 +6,15 @@ import get2gether.event.InviteStatusChangedEvent;
 import get2gether.exception.ResourceAlreadyExistsException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.manualMapper.ManualInviteMapper;
-import get2gether.model.*;
+import get2gether.model.Invite;
+import get2gether.model.ResourceType;
+import get2gether.model.User;
 import get2gether.repository.InviteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -67,16 +67,6 @@ public class InviteService {
                     "event " + inviteDto.getTypeId() + " for this receiver: " + receiver.getUsername()
             );
         }
-//        receiver.getInvitesReceived().stream()
-//                .filter(invite -> invite.getType() == inviteDto.getType()
-//                        && Objects.equals(invite.getTypeId(), inviteDto.getTypeId()))
-//                .findAny()
-//                .ifPresent(invite -> {
-//                    throw new ResourceAlreadyExistsException(
-//                            ResourceType.INVITE,
-//                            "event " + invite.getTypeId() + " for this receiver: " + receiver.getUsername()
-//                    );
-//                });
     }
 
     public void handleInviteResponse(String username, Long inviteId, boolean accepted) {
