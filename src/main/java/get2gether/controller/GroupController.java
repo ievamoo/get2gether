@@ -34,7 +34,8 @@ public class GroupController {
     public ResponseEntity<GroupDto> createGroup(
             Authentication authentication, @RequestBody final GroupDto groupDto) {
         var username = authentication.getName();
-        return ResponseEntity.status(HttpStatus.CREATED).body(groupService.createGroup(username, groupDto));
+        var group = groupService.createGroup(username, groupDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(group);
     }
 
     @PutMapping("/{groupId}")
