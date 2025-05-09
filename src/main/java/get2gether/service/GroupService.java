@@ -3,6 +3,8 @@ package get2gether.service;
 import get2gether.dto.EventDto;
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
+import get2gether.event.EventPublisher;
+import get2gether.event.GroupCreatedEvent;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceAlreadyExistsException;
 import get2gether.exception.ResourceNotFoundException;
@@ -35,11 +37,11 @@ import java.util.stream.Collectors;
 public class GroupService {
 
     private final GroupRepository groupRepository;
-    private final GroupMapper groupMapper;
     private final UserService userService;
     private final ManualGroupMapper manualGroupMapper;
     private final ManualUserMapper manualUserMapper;
     private final ManualEventMapper manualEventMapper;
+    private final EventPublisher eventPublisher;
 
     public GroupDto getGroupById(Long id) {
         var foundGroup = getGroupByIdFromDb(id);
@@ -55,13 +57,14 @@ public class GroupService {
         var currentUser = userService.getUserFromDb(username);
         var group = manualGroupMapper.dtoToModelOnGroupCreate(groupDto, currentUser);
         var savedGroup = groupRepository.save(group);
+        eventPublisher.publishGroupCreatedEvent(new GroupCreatedEvent(this, savedGroup, groupDto.getInvitedUsernames()));
         return manualGroupMapper.modelToDtoOnGroupCreate(savedGroup);
     }
 
     @Transactional
     public GroupDto updateGroup(GroupDto editedGroup, Long id) {
         var group = getGroupByIdFromDb(id);
-        group.setName(editedGroup.getName());
+        group.setName(editedGroup.getName()).setGroupColor(editedGroup.getGroupColor());
         return manualGroupMapper.modelToDtoOnUpdate(groupRepository.save(group));
     }
 

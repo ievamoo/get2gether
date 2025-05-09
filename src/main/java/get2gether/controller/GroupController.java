@@ -40,7 +40,8 @@ public class GroupController {
 
     @PutMapping("/{groupId}")
     public ResponseEntity<GroupDto> editGroupName(@RequestBody final GroupDto editedGroup, @PathVariable final Long groupId) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(groupService.updateGroup(editedGroup, groupId));
+        var updatedGroup = groupService.updateGroup(editedGroup, groupId);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(updatedGroup);
     }
 
     @DeleteMapping("/{groupId}")

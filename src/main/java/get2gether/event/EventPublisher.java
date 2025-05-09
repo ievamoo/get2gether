@@ -23,6 +23,11 @@ public class EventPublisher {
         publisher.publishEvent(event);
     }
 
+    public void publishGroupCreatedEvent(GroupCreatedEvent event) {
+        log.info("[EventPublisher]: GroupCreatedEvent fired for group {}", event.getGroup().getId());
+        publisher.publishEvent(event);
+    }
+
 
 
 

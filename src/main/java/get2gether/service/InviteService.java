@@ -3,19 +3,21 @@ package get2gether.service;
 import get2gether.dto.InviteDto;
 import get2gether.event.EventPublisher;
 import get2gether.event.InviteStatusChangedEvent;
-import get2gether.exception.ResourceAlreadyExistsException;
+import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.manualMapper.ManualInviteMapper;
-import get2gether.model.Invite;
-import get2gether.model.ResourceType;
-import get2gether.model.User;
+import get2gether.model.*;
+import get2gether.repository.GroupRepository;
 import get2gether.repository.InviteRepository;
+import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor
@@ -28,46 +30,93 @@ public class InviteService {
     private final GroupService groupService;
     private final EventService eventService;
     private final EventPublisher eventPublisher;
+    private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
 
 
     @Transactional
     public String createNewInvite(InviteDto inviteDto, String senderName) {
-        var receiver = userService.getUserFromDb(inviteDto.getReceiverUsername());
-        switch(inviteDto.getType()) {
-            case EVENT -> createEventInvite(inviteDto, receiver, senderName);
-            case GROUP -> createGroupInvite(inviteDto, receiver, senderName);
+        if (inviteDto.getType() != Type.GROUP) {
+            throw new ForbiddenActionException("Only GROUP invites are supported.");
         }
-        return String.format("Invite to join your %s was sent to %s", inviteDto.getType(), receiver.getUsername());
-    }
 
-    private void createGroupInvite(InviteDto inviteDto, User receiver, String senderUsername) {
         var group = groupService.getGroupByIdFromDb(inviteDto.getTypeId());
-        var sender = userService.getUserFromDb(senderUsername);
+        var sender = userService.getUserFromDb(senderName);
+
+        if (!group.getMembers().contains(sender)) {
+            throw new ForbiddenActionException("Only group members can send invites.");
+        }
+
+        Map<String, String> errorMessages = new HashMap<>();
+        Set<User> receivers = new HashSet<>();
+
+        inviteDto.getReceiverUsernames().forEach(username ->
+                userRepository.findByUsername(username)
+                        .ifPresentOrElse(
+                                receivers::add,
+                                () -> errorMessages.put(username, "User does not exist")
+                        )
+        );
+
+        errorMessages.putAll(createInvitesForGroup(group, receivers, senderName));
+
+        return errorMessages.isEmpty()
+                ? "Invite(s) were sent successfully"
+                : errorMessages.entrySet().stream()
+                .map(entry -> entry.getKey() + ": " + entry.getValue())
+                .collect(Collectors.joining("\n"));
+    }
+
+
+    private Map<String, String> createInvitesForGroup(Group group, Set<User> receivers, String senderUsername) {
+        Map<String, String> errorMessages = new HashMap<>();
+        receivers.forEach(receiver -> tryCreateGroupInvite(group, receiver, senderUsername, errorMessages));
+        return errorMessages;
+    }
+
+    @Transactional
+    public void createInvitesOnGroupCreation(Group group, Set<String> invitedUsernames) {
+        var receivers = invitedUsernames.stream()
+                .map(userRepository::findByUsername)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
+
+        var sender = group.getAdmin();
+        createInvitesForGroup(group, receivers, sender.getUsername());
+    }
+
+    private void tryCreateGroupInvite(Group group, User receiver, String senderName, Map<String, String> errorMessages) {
         if (group.getMembers().contains(receiver)) {
-            throw new ResourceAlreadyExistsException(ResourceType.USER,
-                    String.format("%s in group %s", receiver.getUsername(), group.getName()));
+            errorMessages.put(receiver.getUsername(), String.format("User already exists in group %s", group.getName()));
+            return;
         }
-        checkIfInviteAlreadyReceived(inviteDto, receiver);
-        var createdInvite = manualInviteMapper.dtoToModel(inviteDto, receiver, sender, group.getName());
+
+        if (checkIfInviteAlreadyReceived(group.getId(), receiver, errorMessages)) {
+            return;
+        }
+
+        var createdInvite = manualInviteMapper.dtoToModel(group.getId(), receiver, senderName, group.getName());
         inviteRepository.save(createdInvite);
+        log.info("[GroupService]: invites created for selected members.");
     }
 
-    private void createEventInvite(InviteDto inviteDto, User receiver, String senderUsername) {
-        var event = eventService.getEventByIdFromDb(inviteDto.getTypeId());
-        var sender = userService.getUserFromDb(senderUsername);
-        checkIfInviteAlreadyReceived(inviteDto, receiver);
-        var createdInvite = manualInviteMapper.dtoToModel(inviteDto, receiver, sender, event.getName());
-        inviteRepository.save(createdInvite);
+    private boolean checkIfInviteAlreadyReceived(Long groupId, User receiver, Map<String, String> errorMessages) {
+        if (inviteRepository.existsByReceiverAndTypeAndTypeId(receiver, Type.GROUP, groupId)) {
+            errorMessages.put(receiver.getUsername(), "User is already invited to the group");
+            return true;
+        }
+        return false;
     }
 
-    private void checkIfInviteAlreadyReceived(InviteDto inviteDto, User receiver) {
-        if (inviteRepository.existsByReceiverAndTypeAndTypeId(receiver, inviteDto.getType(), inviteDto.getTypeId())) {
-            throw new ResourceAlreadyExistsException(
-                    ResourceType.INVITE,
-                    "event " + inviteDto.getTypeId() + " for this receiver: " + receiver.getUsername()
-            );
-        }
-    }
+
+    //    private void createEventInvite(InviteDto inviteDto, User receiver, String senderUsername) {
+//        var event = eventService.getEventByIdFromDb(inviteDto.getTypeId());
+//        var sender = userService.getUserFromDb(senderUsername);
+//        checkIfInviteAlreadyReceived(inviteDto, receiver);
+//        var createdInvite = manualInviteMapper.dtoToModel(inviteDto, receiver, sender, event.getName());
+//        inviteRepository.save(createdInvite);
+//    }
 
     public void handleInviteResponse(String username, Long inviteId, boolean accepted) {
         var user = userService.getUserFromDb(username);

@@ -5,11 +5,14 @@ import get2gether.model.Invite;
 import get2gether.service.InviteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static org.springframework.web.servlet.function.RequestPredicates.contentType;
 
 @RestController
 @RequestMapping("/invites")
@@ -19,10 +22,12 @@ public class InviteController {
     private final InviteService inviteService;
 
     @PostMapping
-    ResponseEntity<String> createInvite(Authentication authentication, @RequestBody final InviteDto inviteDto) {
+    ResponseEntity<String> createGroupInvite(Authentication authentication, @RequestBody final InviteDto inviteDto) {
         var username = authentication.getName();
         var inviteResponse = inviteService.createNewInvite(inviteDto, username);
-        return ResponseEntity.status(HttpStatus.CREATED).body(inviteResponse);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(inviteResponse);
     }
 
     @PatchMapping("/{inviteId}")

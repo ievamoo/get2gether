@@ -4,8 +4,6 @@ import get2gether.dto.InviteDto;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.model.*;
 import get2gether.repository.EventRepository;
-import get2gether.repository.GroupRepository;
-import get2gether.repository.InviteRepository;
 import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,11 +17,11 @@ public class ManualInviteMapper {
     private final UserRepository userRepository;
     private final EventRepository eventRepository;
 
-    public Invite dtoToModel(InviteDto dto, User receiver, User sender, String typeName) {
+    public Invite dtoToModel(Long groupId, User receiver, String senderUsername, String typeName) {
         return Invite.builder()
-                .type(dto.getType())
-                .typeId(dto.getTypeId())
-                .senderUsername(sender.getUsername())
+                .type(Type.GROUP)
+                .typeId(groupId)
+                .senderUsername(senderUsername)
                 .typeName(typeName)
                 .receiver(receiver)
                 .build();
