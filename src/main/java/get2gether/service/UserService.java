@@ -82,4 +82,8 @@ public class UserService {
         var matchingUser = getUserFromDb(userName);
         return matchingUser.getAvailableDays();
     }
+
+    public boolean userExistsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
 }

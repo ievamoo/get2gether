@@ -25,4 +25,5 @@ public class GroupDto {
     private List<EventDto> events;
     private List<MessageDto> messages;
     private String groupColor;
+    private Set<String> invitedUsernames;
 }

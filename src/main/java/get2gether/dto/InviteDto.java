@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -20,6 +21,6 @@ public class InviteDto {
     private String groupName;
     private LocalDate eventDate;
     private String senderUsername;
-    private String receiverUsername;
+    private Set<String> receiverUsernames;
     private Boolean accepted;
 }
