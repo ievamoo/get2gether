@@ -46,6 +46,7 @@ public class ManualGroupMapper {
 
     public GroupDto modelToDtoOnUpdate(Group group) {
         return GroupDto.builder()
+                .id(group.getId())
                 .name(group.getName())
                 .groupColor(group.getGroupColor())
                 .build();
