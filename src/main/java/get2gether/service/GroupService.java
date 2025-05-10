@@ -65,7 +65,8 @@ public class GroupService {
     public GroupDto updateGroup(GroupDto editedGroup, Long id) {
         var group = getGroupByIdFromDb(id);
         group.setName(editedGroup.getName()).setGroupColor(editedGroup.getGroupColor());
-        return manualGroupMapper.modelToDtoOnUpdate(groupRepository.save(group));
+        var updatedGroup = groupRepository.save(group);
+        return manualGroupMapper.modelToDtoOnUpdate(updatedGroup);
     }
 
     @Transactional
@@ -102,7 +103,7 @@ public class GroupService {
     }
 
     @Transactional
-    public Set<GroupDto> leaveGroup(Long groupId, String username) {
+    public void leaveGroup(Long groupId, String username) {
         var groupToLeave = groupRepository.findById(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + groupId));
         var currentUser = userService.getUserFromDb(username);
@@ -112,9 +113,9 @@ public class GroupService {
         checkIfAdmin(username, groupToLeave);
         groupToLeave.getMembers().remove(currentUser);
         groupRepository.save(groupToLeave);
-        return userService.getUserFromDb(username).getGroups().stream()
-                .map(manualGroupMapper::modelToDtoOnGroupLeave)
-                .collect(Collectors.toSet());
+//        return userService.getUserFromDb(username).getGroups().stream()
+//                .map(manualGroupMapper::modelToDtoOnGroupLeave)
+//                .collect(Collectors.toSet());
     }
 
     public List<EventDto> getAllGroupEvents(Long groupId) {

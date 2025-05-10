@@ -73,14 +73,13 @@ public class GroupController {
         return ResponseEntity.accepted().body(updatedMembers);
     }
 
-    @DeleteMapping("/{groupId}/members/")
-    public ResponseEntity<Set<GroupDto>> leaveGroup(
+    @DeleteMapping("/{groupId}/members")
+    public ResponseEntity<Void> leaveGroup(
             @PathVariable final Long groupId,
             Authentication authentication
     ) {
         var username = authentication.getName();
-        var updatedGroups = groupService.leaveGroup(groupId, username);
-        return ResponseEntity.accepted().body(updatedGroups);
+        groupService.leaveGroup(groupId, username);
+        return ResponseEntity.noContent().build();
     }
-
 }
