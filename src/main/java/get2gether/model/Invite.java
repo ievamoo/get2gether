@@ -7,14 +7,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import java.util.List;
-
 @Entity
+@Table(name = "invite", indexes = {
+        @Index(name = "idx_receiver_type_typeId", columnList = "receiver_id, type, typeId"),
+        @Index(name = "idx_type_typeId", columnList = "type, typeId")
+})
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Accessors(chain = true)
+
 public class Invite {
 
     @Id
