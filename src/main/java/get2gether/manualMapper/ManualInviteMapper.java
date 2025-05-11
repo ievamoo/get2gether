@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -36,6 +37,7 @@ public class ManualInviteMapper {
                 .senderUsername(formatSender(invite.getSenderUsername()))
                 .groupName(invite.getType() == Type.EVENT ? getGroupName(invite.getTypeId()) : null)
                 .eventDate(invite.getType() == Type.EVENT ? getEventDate(invite.getTypeId()) : null)
+                .receiverUsernames(Set.of(invite.getSenderUsername()))
                 .build();
     }
 

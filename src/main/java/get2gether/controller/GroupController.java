@@ -51,17 +51,6 @@ public class GroupController {
         return ResponseEntity.noContent().build();
     }
 
-
-//    @PostMapping("/{groupId}/members")
-//    public ResponseEntity<Set<GroupDto>> joinGroup(
-//            @PathVariable final Long groupId,
-//            Authentication authentication
-//    ) {
-//        var username = authentication.getName();
-//        var updatedGroups = groupService.addMember(groupId, username);
-//        return ResponseEntity.status(HttpStatus.ACCEPTED).body(updatedGroups);
-//    }
-
     @DeleteMapping("/{groupId}/members/{memberToDelete}")
     public ResponseEntity<Set<UserDto>> removeUserFromGroup(
             @PathVariable final Long groupId,
@@ -82,4 +71,6 @@ public class GroupController {
         groupService.leaveGroup(groupId, username);
         return ResponseEntity.noContent().build();
     }
+
+
 }

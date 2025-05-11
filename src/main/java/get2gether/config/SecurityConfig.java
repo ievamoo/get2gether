@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/user/**").hasAnyAuthority(Role.ADMIN.name(), Role.USER.name())
                         .requestMatchers(HttpMethod.DELETE, "/user/**").hasAuthority(Role.USER.name())
                         .requestMatchers(HttpMethod.PATCH, "/events/**").hasAuthority(Role.USER.name())
+                        .requestMatchers("/ws/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -31,10 +32,10 @@ public class EventService {
     public EventDto createEvent(EventDto eventDto, String username) {
         var group = groupService.findByName(eventDto.getGroupName());
         var event = manualEventMapper.dtoToModel(eventDto);
-        event.setGroup(group).setHostUsername(username);
+        var host = userService.getUserFromDb(username);
+        event.setGroup(group).setHostUsername(username).setGoingMembers(Set.of(host));
         var savedEvent = eventRepository.save(event);
         eventPublisher.publishEventCreatedEvent(new EventCreatedEvent(this, savedEvent));
-//        event.setGroup(group).setHostUsername(username);
         return manualEventMapper.modelToDtoOnGet(savedEvent);
     }
 

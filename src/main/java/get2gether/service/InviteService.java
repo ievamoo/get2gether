@@ -133,4 +133,10 @@ public class InviteService {
                 .findAny()
                 .orElseThrow(() -> new ResourceNotFoundException(ResourceType.INVITE, "id: " + inviteId));
     }
+
+    public List<InviteDto> getInvitesForEvent(Long eventId) {
+        return inviteRepository.findByTypeAndTypeId(Type.EVENT, eventId).stream()
+                .map(manualInviteMapper::modelToDto)
+                .toList();
+    }
 }
