@@ -28,6 +28,16 @@ public class EventPublisher {
         publisher.publishEvent(event);
     }
 
+    public void publishGroupDeletedEvent(GroupDeletedEvent event) {
+        log.info("[EventPublisher]: GroupDeletedEvent fired for group {}", event.getDeletedGroup().getId());
+        publisher.publishEvent(event);
+    }
+
+    public void publishEventDeletedEvent(EventDeletedEvent event) {
+        log.info("[EventPublisher]: EventDeletedEvent fired for event {}", event.getDeletedEvent().getId());
+        publisher.publishEvent(event);
+    }
+
 
 
 

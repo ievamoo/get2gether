@@ -10,11 +10,11 @@ public class InviteStatusChangedEvent  extends ApplicationEvent {
     private final Invite updatedInvite;
     private final Boolean accepted;
 
-
     public InviteStatusChangedEvent(Object source, Invite updatedInvite, Boolean accepted) {
         super(source);
         this.updatedInvite = updatedInvite;
         this.accepted = accepted;
     }
+
 
 }

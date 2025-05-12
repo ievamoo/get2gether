@@ -5,6 +5,7 @@ import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
 import get2gether.event.EventPublisher;
 import get2gether.event.GroupCreatedEvent;
+import get2gether.event.GroupDeletedEvent;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceAlreadyExistsException;
 import get2gether.exception.ResourceNotFoundException;
@@ -71,6 +72,7 @@ public class GroupService {
         var group = getGroupByIdFromDb(id);
         checkIfActionAllowed(username, group);
         groupRepository.deleteById(id);
+        eventPublisher.publishGroupDeletedEvent(new GroupDeletedEvent(this, group));
     }
 
     @Transactional

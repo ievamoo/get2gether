@@ -32,6 +32,10 @@
 	</properties>
 	<dependencies>
 		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-messaging</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<version>42.7.2</version> <!-- Use the latest version -->

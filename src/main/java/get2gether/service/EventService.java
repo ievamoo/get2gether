@@ -3,6 +3,7 @@ package get2gether.service;
 import get2gether.dto.EventDto;
 import get2gether.dto.EventStatusDto;
 import get2gether.event.EventCreatedEvent;
+import get2gether.event.EventDeletedEvent;
 import get2gether.event.EventPublisher;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -30,6 +32,7 @@ public class EventService {
 
     @Transactional
     public EventDto createEvent(EventDto eventDto, String username) {
+        checkIfDateValid(eventDto.getDate());
         var group = groupService.findByName(eventDto.getGroupName());
         var event = manualEventMapper.dtoToModel(eventDto);
         var host = userService.getUserFromDb(username);
@@ -39,8 +42,15 @@ public class EventService {
         return manualEventMapper.modelToDtoOnGet(savedEvent);
     }
 
+    private void checkIfDateValid(LocalDate eventDate ) {
+        if (eventDate.isBefore(LocalDate.now())) {
+            throw new ForbiddenActionException("Event date cannot be in the past");
+        }
+    }
+
     @Transactional
     public EventDto updateEvent(EventDto eventDto, String username, Long eventId) {
+        checkIfDateValid(eventDto.getDate());
         var event = getEventByIdFromDb(eventId);
         checkIfUserIsAHost(username, event.getHostUsername());
         manualEventMapper.updateEvent(eventDto, event);
@@ -53,6 +63,7 @@ public class EventService {
         var event = getEventByIdFromDb(eventId);
         checkIfUserIsAHost(username, event.getHostUsername());
         eventRepository.deleteById(eventId);
+        eventPublisher.publishEventDeletedEvent(new EventDeletedEvent(this, event));
     }
 
     public Event getEventByIdFromDb(Long eventId) {

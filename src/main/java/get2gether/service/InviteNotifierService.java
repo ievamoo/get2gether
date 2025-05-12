@@ -25,7 +25,7 @@ public class InviteNotifierService {
         }
         String username = usernames.iterator().next();
         if (simpUserRegistry.getUser(username) != null) {
-            messagingTemplate.convertAndSendToUser(username, "/queue/invites", invite);
+            messagingTemplate.convertAndSend("/topic", "Hello, World");
             log.info("Sent invite {} to {}", invite.getId(), username);
         } else {
             log.warn("User {} is not connected. Invite not sent via WebSocket.", username);

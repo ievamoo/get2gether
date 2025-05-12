@@ -37,7 +37,7 @@ public class ManualInviteMapper {
                 .senderUsername(formatSender(invite.getSenderUsername()))
                 .groupName(invite.getType() == Type.EVENT ? getGroupName(invite.getTypeId()) : null)
                 .eventDate(invite.getType() == Type.EVENT ? getEventDate(invite.getTypeId()) : null)
-                .receiverUsernames(Set.of(invite.getSenderUsername()))
+                .receiverUsernames(Set.of(invite.getReceiver().getUsername()))
                 .build();
     }
 
