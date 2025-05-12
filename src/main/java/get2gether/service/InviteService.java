@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,7 +36,7 @@ public class InviteService {
 
 
     @Transactional
-    public String createNewInvite(InviteDto inviteDto, String senderName) {
+    public String createNewInviteWhenGroupAlreadyExists(InviteDto inviteDto, String senderName) {
         if (inviteDto.getType() != Type.GROUP) {
             throw new ForbiddenActionException("Only GROUP invites are supported.");
         }
@@ -58,7 +59,9 @@ public class InviteService {
                         )
         );
 
-        errorMessages.putAll(createInvitesForGroup(group, receivers, senderName));
+        receivers.forEach(receiver -> processGroupInviteCreation(group, receiver, sender.getUsername(), errorMessages));
+
+//        errorMessages.putAll(createInvitesForGroup(group, receivers, senderName));
 
         return errorMessages.isEmpty()
                 ? "Invite(s) were sent successfully"
@@ -67,56 +70,53 @@ public class InviteService {
                 .collect(Collectors.joining("\n"));
     }
 
-
-    private Map<String, String> createInvitesForGroup(Group group, Set<User> receivers, String senderUsername) {
-        Map<String, String> errorMessages = new HashMap<>();
-        receivers.forEach(receiver -> tryCreateGroupInvite(group, receiver, senderUsername, errorMessages));
-        return errorMessages;
-    }
-
-    @Transactional
-    public void createInvitesOnGroupCreation(Group group, Set<String> invitedUsernames) {
-        var receivers = invitedUsernames.stream()
-                .map(userRepository::findByUsername)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toSet());
-
-        var sender = group.getAdmin();
-        createInvitesForGroup(group, receivers, sender.getUsername());
-    }
-
-    private void tryCreateGroupInvite(Group group, User receiver, String senderName, Map<String, String> errorMessages) {
-        if (group.getMembers().contains(receiver)) {
-            errorMessages.put(receiver.getUsername(), String.format("User already exists in group %s", group.getName()));
-            return;
-        }
-
-        if (checkIfInviteAlreadyReceived(group.getId(), receiver, errorMessages)) {
-            return;
-        }
-
+    private void processGroupInviteCreation(Group group, User receiver, String senderName, Map<String, String> errorMessages) {
+        checkIfInviteShouldBeSent(group, receiver, errorMessages);
         var createdInvite = manualInviteMapper.dtoToModel(group.getId(), receiver, senderName, group.getName());
         inviteRepository.save(createdInvite);
         log.info("[GroupService]: invites created for selected members.");
     }
 
-    private boolean checkIfInviteAlreadyReceived(Long groupId, User receiver, Map<String, String> errorMessages) {
-        if (inviteRepository.existsByReceiverAndTypeAndTypeId(receiver, Type.GROUP, groupId)) {
-            errorMessages.put(receiver.getUsername(), "User is already invited to the group");
-            return true;
+    private void checkIfInviteShouldBeSent(Group group, User receiver, Map<String, String> errorMessages) {
+        if (group.getMembers().contains(receiver)) {
+            errorMessages.put(receiver.getUsername(), String.format("User already exists in group %s", group.getName()));
+            return;
         }
-        return false;
+        if (inviteRepository.existsByReceiverAndTypeAndTypeId(receiver, Type.GROUP, group.getId())) {
+            errorMessages.put(receiver.getUsername(), "User is already invited to the group");
+        }
     }
 
-
-    //    private void createEventInvite(InviteDto inviteDto, User receiver, String senderUsername) {
-//        var event = eventService.getEventByIdFromDb(inviteDto.getTypeId());
-//        var sender = userService.getUserFromDb(senderUsername);
-//        checkIfInviteAlreadyReceived(inviteDto, receiver);
-//        var createdInvite = manualInviteMapper.dtoToModel(inviteDto, receiver, sender, event.getName());
-//        inviteRepository.save(createdInvite);
+    //    private Map<String, String> createInvitesForGroup(Group group, Set<User> receivers, String senderUsername) {
+//        Map<String, String> errorMessages = new HashMap<>();
+//        receivers.forEach(receiver -> tryCreateGroupInvite(group, receiver, senderUsername, errorMessages));
+//
+//        return errorMessages;
 //    }
+
+
+    @Transactional
+    public List<InviteDto> createInvitesOnGroupCreation(Group group, Set<String> invitedUsernames) {
+        var sender = group.getAdmin();
+
+        var receivers = invitedUsernames.stream()
+                .map(userRepository::findByUsername)
+                .filter(Optional::isPresent)
+                .filter(user -> !Objects.equals(user.get().getUsername(), sender.getUsername()))
+                .map(Optional::get)
+                .collect(Collectors.toSet());
+
+        var inviteDtos = new ArrayList<InviteDto>();
+
+        receivers.forEach(receiver -> {
+            var createdInvite = manualInviteMapper.dtoToModel(group.getId(), receiver, sender.getUsername(), group.getName());
+            var savedInvite = inviteRepository.save(createdInvite);
+            inviteDtos.add(manualInviteMapper.modelToDto(savedInvite));
+            log.info("[GroupService]: invite created for member {}", receiver.getUsername());
+        });
+
+        return inviteDtos;
+    }
 
     public void handleInviteResponse(String username, Long inviteId, boolean accepted) {
         var user = userService.getUserFromDb(username);
@@ -134,9 +134,12 @@ public class InviteService {
                 .orElseThrow(() -> new ResourceNotFoundException(ResourceType.INVITE, "id: " + inviteId));
     }
 
-    public List<InviteDto> getInvitesForEvent(Long eventId) {
-        return inviteRepository.findByTypeAndTypeId(Type.EVENT, eventId).stream()
-                .map(manualInviteMapper::modelToDto)
-                .toList();
+    public List<Invite> getInvitesByTypeAndTypeId(Type type, Long id) {
+        return inviteRepository.findByTypeAndTypeId(type, id);
     }
+
+    public void deleteInvite(List<Invite> invites) {
+         invites.forEach(inviteRepository::delete);
+    }
+
 }

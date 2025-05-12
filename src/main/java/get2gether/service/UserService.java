@@ -67,7 +67,7 @@ public class UserService {
     public List<UserDto> getAllUsers() {
         var users = userRepository.findAll();
         return users.stream()
-                .map(userMapper::modelToDto)
+                .map(manualUserMapper::modelToDtoOnGroupCreate)
                 .toList();
     }
 

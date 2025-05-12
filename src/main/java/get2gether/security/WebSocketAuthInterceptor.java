@@ -4,6 +4,9 @@ import get2gether.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -13,66 +16,61 @@ import org.springframework.messaging.simp.user.SimpUser;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component
-@Slf4j
+@Configuration
 @RequiredArgsConstructor
+@Slf4j
+@Order(Ordered.HIGHEST_PRECEDENCE + 99)/// ensure its used before spring securities interceptor
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
+
     private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService customUserDetailsService;
+    /// this interceptor is used to intercept all STOMP connect frames
+    /// we validate the users token sent in the headers of the connect frame and sets the principal in the ws context,
+    /// this way we associate the websocket session with this specific user.
+    /// other frames like SEND,SUBSCRIBE use this same principal as the authenticated user
 
     @Override
     public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
-        StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-
+        StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+        assert accessor != null;
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
-            String authHeader = accessor.getFirstNativeHeader("Authorization");
-            log.info("[WebSocket] Processing CONNECT command with auth header: {}", authHeader != null ? "present" : "missing");
+            /// this checks if the command being sent is a CONNECT command
+            /// a user will not be able to send any frames unless they are connected to a STOMP protocol
+            var authHeaderList =  accessor.getNativeHeader("Authorization");
+            log.info("authHeader: {}", authHeaderList);
 
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                String username = jwtUtil.extractUsername(token);
-                log.info("[WebSocket] Extracted username from token: {}", username);
+            assert authHeaderList != null;
+            ///header returns a list of strings
+            String authHeader = authHeaderList.get(0);
+            if(authHeader!=null && authHeader.startsWith("Bearer ")) {
 
-                if (username != null && jwtUtil.isTokenValid(token)) {
-                    try {
-                        List<GrantedAuthority> authorities = jwtUtil.extractRoles(token);
+                String jwt = authHeader.substring(7);
+                String username = jwtUtil.extractUsername(jwt);
+                log.info("username: {}", username);
+                UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+                UsernamePasswordAuthenticationToken authenticatedUser = new UsernamePasswordAuthenticationToken(userDetails.getUsername(),
+                        null,
+                        userDetails.getAuthorities());
+                accessor.setUser(authenticatedUser); ///setting the context of the user as the principal
 
-                        UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(username, null, authorities);
 
-                        accessor.setUser(authentication);
-
-                        log.info("[WebSocket] Successfully authenticated user: {}", username);
-                        log.info("[WebSocket] User principal set to: {}", accessor.getUser().getName());
-
-                        // 👇 Ensure the authentication is also added to headers
-                        return MessageBuilder.createMessage(
-                                message.getPayload(),
-                                accessor.getMessageHeaders()
-                        );
-
-                    } catch (Exception e) {
-                        log.error("[WebSocket] Error during authentication: {}", e.getMessage());
-                        return null;
-                    }
-                } else {
-                    log.warn("[WebSocket] Invalid JWT or missing username");
-                    return null;
-                }
-            } else {
-                log.warn("[WebSocket] Missing or malformed Authorization header");
-                return null;
+            }else{
+                log.info("Authorization header not present");
             }
+
         }
 
+        /// if any other frames are being sent they don't need authentication as it is already set
         return message;
     }
-
 }

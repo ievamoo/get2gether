@@ -8,6 +8,7 @@ import lombok.experimental.Accessors;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -45,4 +46,5 @@ public class Event {
     @JsonManagedReference
     @EqualsAndHashCode.Exclude
     private Set<User> goingMembers;
+
 }

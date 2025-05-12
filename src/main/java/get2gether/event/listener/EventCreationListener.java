@@ -12,25 +12,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.user.SimpUser;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Component;
-
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class EventCreationListener {
 
-    private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final ManualInviteMapper manualInviteMapper;
     private final InviteRepository inviteRepository;
-    private final SimpUserRegistry simpUserRegistry;
-    private final InviteNotifierService inviteNotifierService;
+
 
     @EventListener
     public void handleEventCreation(EventCreatedEvent event) {
@@ -40,7 +33,6 @@ public class EventCreationListener {
         var createdEvent = event.getCreatedEvent();
 
         log.info("[EventCreationListener] Processing {} members for event", members.size());
-
         members.stream()
                 .filter(user -> !user.getUsername().equalsIgnoreCase(createdEvent.getHostUsername()))
                 .forEach(user -> {
@@ -57,10 +49,10 @@ public class EventCreationListener {
                     log.info("[EventCreationListener] Invite saved for user: {}", user.getUsername());
 
                     var inviteDto = manualInviteMapper.modelToDto(savedInvite);
+                    messagingTemplate.convertAndSendToUser(user.getUsername(), "/queue/invites", inviteDto);
 
-                    inviteNotifierService.sendInviteToUser(inviteDto);
+//                    inviteNotifierService.sendInviteToUser(inviteDto);
                 });
-
     }
 
     private Invite createInvite(Long eventId, String senderUsername, User receiver, String typeName) {
