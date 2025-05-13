@@ -2,14 +2,19 @@ package get2gether.event.listener;
 
 import get2gether.event.GroupDeletedEvent;
 import get2gether.model.Type;
+import get2gether.model.User;
 import get2gether.repository.InviteRepository;
 import get2gether.repository.UserRepository;
 import get2gether.service.InviteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -19,6 +24,7 @@ public class GroupDeletionListener {
     private final InviteService inviteService;
     private final UserRepository userRepository;
     private final InviteRepository inviteRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @EventListener
     @Transactional
@@ -29,6 +35,9 @@ public class GroupDeletionListener {
         inviteRepository.deleteAll(groupInvitesToDelete);
 
         log.info("[GroupDeletionListener]: group invites deleted for group id {} ", event.getDeletedGroup().getId());
+        var pendingInvitesReceivers = groupInvitesToDelete.stream().map(invite -> invite.getReceiver().getUsername()).collect(Collectors.toSet());
+        pendingInvitesReceivers.addAll(event.getDeletedGroup().getMembers().stream()
+                .map(User::getUsername).collect(Collectors.toSet()));
 
         event.getDeletedGroup().getEvents().stream()
                 .map(event1 -> inviteService.getInvitesByTypeAndTypeId(Type.EVENT, event1.getId()))
@@ -37,11 +46,20 @@ public class GroupDeletionListener {
                         var receiver = invite.getReceiver();
                         if (receiver != null) {
                             receiver.getInvitesReceived().remove(invite);
+                            pendingInvitesReceivers.add(receiver.getUsername());
+                            log.info(receiver.getUsername());
                         }
                         invite.setReceiver(null);
                     }
                     inviteService.deleteInvite(invites);
                 });
         log.info("[GroupDeletionListener]: event invites deleted for group id {} ", event.getDeletedGroup().getId());
+
+        pendingInvitesReceivers.stream()
+                .filter(receiverUsername -> !Objects.equals(receiverUsername, event.getDeletedGroup().getAdmin().getUsername()))
+                .forEach(receiverUsername -> {
+                    log.info("Current user {} ", receiverUsername);
+                    messagingTemplate.convertAndSendToUser(receiverUsername, "/queue/group-deleted", "deleted");
+                });
     }
 }

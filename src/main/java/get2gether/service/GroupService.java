@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 
 @Service
 @RequiredArgsConstructor
@@ -40,6 +42,8 @@ public class GroupService {
     private final ManualUserMapper manualUserMapper;
     private final ManualEventMapper manualEventMapper;
     private final EventPublisher eventPublisher;
+    private final SimpMessagingTemplate simpMessagingTemplate;
+
 
     public GroupDto getGroupById(Long id) {
         var foundGroup = getGroupByIdFromDb(id);

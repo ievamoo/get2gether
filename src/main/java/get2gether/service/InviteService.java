@@ -12,6 +12,7 @@ import get2gether.repository.InviteRepository;
 import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class InviteService {
     private final EventPublisher eventPublisher;
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
 
     @Transactional
@@ -73,7 +75,8 @@ public class InviteService {
     private void processGroupInviteCreation(Group group, User receiver, String senderName, Map<String, String> errorMessages) {
         checkIfInviteShouldBeSent(group, receiver, errorMessages);
         var createdInvite = manualInviteMapper.dtoToModel(group.getId(), receiver, senderName, group.getName());
-        inviteRepository.save(createdInvite);
+        var inviteDto = manualInviteMapper.modelToDto(inviteRepository.save(createdInvite));
+        simpMessagingTemplate.convertAndSendToUser(receiver.getUsername(), "/queue/invites", inviteDto);
         log.info("[GroupService]: invites created for selected members.");
     }
 
