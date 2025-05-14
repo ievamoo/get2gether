@@ -40,8 +40,8 @@ public class Event {
     @ManyToMany
     @JoinTable(
             name = "user_event",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "event_id")
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     @JsonManagedReference
     @EqualsAndHashCode.Exclude

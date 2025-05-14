@@ -38,6 +38,11 @@ public class EventPublisher {
         publisher.publishEvent(event);
     }
 
+    public void publishGroupLeaveEvent(GroupLeaveEvent event) {
+        log.info("[EventPublisher]: GroupLeaveEvent fired for group {}", event.getLeftGroup().getId());
+        publisher.publishEvent(event);
+    }
+
 
 
 
