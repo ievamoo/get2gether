@@ -16,5 +16,4 @@ public class InviteStatusChangedEvent  extends ApplicationEvent {
         this.accepted = accepted;
     }
 
-
 }

@@ -6,6 +6,7 @@ import get2gether.dto.UserDto;
 import get2gether.event.EventPublisher;
 import get2gether.event.GroupCreatedEvent;
 import get2gether.event.GroupDeletedEvent;
+import get2gether.event.GroupLeaveEvent;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceAlreadyExistsException;
 import get2gether.exception.ResourceNotFoundException;
@@ -13,13 +14,16 @@ import get2gether.exception.UserNotFoundException;
 import get2gether.manualMapper.ManualEventMapper;
 import get2gether.manualMapper.ManualGroupMapper;
 import get2gether.manualMapper.ManualUserMapper;
+import get2gether.model.Event;
 import get2gether.model.Group;
 import get2gether.model.ResourceType;
 import get2gether.model.User;
+import get2gether.repository.EventRepository;
 import get2gether.repository.GroupRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 
 @Service
@@ -43,6 +46,7 @@ public class GroupService {
     private final ManualEventMapper manualEventMapper;
     private final EventPublisher eventPublisher;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final EventRepository eventRepository;
 
 
     public GroupDto getGroupById(Long id) {
@@ -107,19 +111,35 @@ public class GroupService {
 
     @Transactional
     public void leaveGroup(Long groupId, String username) {
-        var groupToLeave = groupRepository.findById(groupId)
+        Group groupToLeave = groupRepository.findById(groupId)
                 .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + groupId));
-        var currentUser = userService.getUserFromDb(username);
+
+        User currentUser = userService.getUserFromDb(username);
+
         if (!groupToLeave.getMembers().contains(currentUser)) {
-            throw new UserNotFoundException("User not found in group with username" + currentUser.getUsername());
+            throw new UserNotFoundException("User not found in group with username " + currentUser.getUsername());
         }
+
         checkIfAdmin(username, groupToLeave);
+        eventPublisher.publishGroupLeaveEvent(new GroupLeaveEvent(this, groupToLeave, currentUser));
+        // Remove user from group's member set
         groupToLeave.getMembers().remove(currentUser);
+        currentUser.getGroups().remove(groupToLeave);
+
+        // Remove user from going events in this group
+        List<Event> eventsToRemove = currentUser.getGoingEvents().stream()
+                .filter(event -> event.getGroup().getId().equals(groupId))
+                .toList(); // Make a copy to avoid concurrent modification
+
+        for (Event event : eventsToRemove) {
+            event.getGoingMembers().remove(currentUser);
+            currentUser.getGoingEvents().remove(event);
+        }
+
+        eventRepository.saveAll(eventsToRemove);
         groupRepository.save(groupToLeave);
-//        return userService.getUserFromDb(username).getGroups().stream()
-//                .map(manualGroupMapper::modelToDtoOnGroupLeave)
-//                .collect(Collectors.toSet());
     }
+
 
     public List<EventDto> getAllGroupEvents(Long groupId) {
         var group = getGroupByIdFromDb(groupId);
