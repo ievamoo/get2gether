@@ -43,6 +43,11 @@ public class EventPublisher {
         publisher.publishEvent(event);
     }
 
+    public void publishEventAttendanceChangedEvent(EventAttendanceChangedEvent event) {
+        log.info("[EventPublisher]: EventAttendanceChangedEvent fired for user {}", event.getUser().getId());
+        publisher.publishEvent(event);
+    }
+
 
 
 

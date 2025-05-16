@@ -16,7 +16,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Array;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,10 +29,8 @@ public class InviteService {
     private final UserService userService;
     private final ManualInviteMapper manualInviteMapper;
     private final GroupService groupService;
-    private final EventService eventService;
     private final EventPublisher eventPublisher;
     private final UserRepository userRepository;
-    private final GroupRepository groupRepository;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
 
@@ -143,6 +140,10 @@ public class InviteService {
 
     public void deleteInvite(List<Invite> invites) {
          invites.forEach(inviteRepository::delete);
+    }
+
+    public Optional<Invite> findByReceiverAndTypeAndTypeId(User receiver, Type type, Long typeId) {
+        return inviteRepository.findByReceiverAndTypeAndTypeId(receiver, type, typeId);
     }
 
 }

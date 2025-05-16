@@ -62,4 +62,7 @@ public class GroupDeletionListener {
                     messagingTemplate.convertAndSendToUser(receiverUsername, "/queue/group-deleted", "deleted");
                 });
     }
+
+
+
 }

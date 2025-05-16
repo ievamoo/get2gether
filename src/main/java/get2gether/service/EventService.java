@@ -2,9 +2,7 @@ package get2gether.service;
 
 import get2gether.dto.EventDto;
 import get2gether.dto.EventStatusDto;
-import get2gether.event.EventCreatedEvent;
-import get2gether.event.EventDeletedEvent;
-import get2gether.event.EventPublisher;
+import get2gether.event.*;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.manualMapper.ManualEventMapper;
@@ -29,6 +27,7 @@ public class EventService {
     private final ManualEventMapper manualEventMapper;
     private final EventPublisher eventPublisher;
     private final UserService userService;
+    private final InviteService inviteService;
 
     @Transactional
     public EventDto createEvent(EventDto eventDto, String username) {
@@ -39,6 +38,7 @@ public class EventService {
         event.setGroup(group).setHostUsername(username).setGoingMembers(Set.of(host));
         var savedEvent = eventRepository.save(event);
         eventPublisher.publishEventCreatedEvent(new EventCreatedEvent(this, savedEvent));
+        eventPublisher.publishEventAttendanceChangedEvent(new EventAttendanceChangedEvent(this, savedEvent.getDate(), host, true));
         return manualEventMapper.modelToDtoOnGet(savedEvent);
     }
 
@@ -82,6 +82,7 @@ public class EventService {
         user.getGoingEvents().add(event);
         event.getGoingMembers().add(user);
         eventRepository.save(event);
+        eventPublisher.publishEventAttendanceChangedEvent(new EventAttendanceChangedEvent(this, event.getDate(), user, true));
         log.info("[EventService]: added {} to event", user.getUsername());
     }
 
@@ -95,6 +96,7 @@ public class EventService {
 
     public List<EventDto> toggleEventAttendance(String username, Long eventId, EventStatusDto dto) {
         var user = userService.getUserFromDb(username);
+        checkForPendingInvites(eventId, dto, user);
         if (dto.getIsGoing()) {
             addUserToEvent(eventId, user);
         } else {
@@ -103,5 +105,10 @@ public class EventService {
         return userService.getUserFromDb(username).getGoingEvents().stream()
                 .map(manualEventMapper::modelToDtoOnGet)
                 .toList();
+    }
+
+    private void checkForPendingInvites(Long eventId, EventStatusDto dto, User user) {
+        var pendingEventInvite = inviteService.findByReceiverAndTypeAndTypeId(user, Type.EVENT, eventId);
+        pendingEventInvite.ifPresent(invite -> inviteService.deleteInvite(List.of(invite)));
     }
 }

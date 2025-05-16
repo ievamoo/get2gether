@@ -15,6 +15,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -23,6 +25,7 @@ public class EventCreationListener {
     private final SimpMessagingTemplate messagingTemplate;
     private final ManualInviteMapper manualInviteMapper;
     private final InviteRepository inviteRepository;
+    private final UserRepository userRepository;
 
 
     @EventListener
@@ -64,4 +67,13 @@ public class EventCreationListener {
                 .receiver(receiver)
                 .build();
     }
+
+//    @EventListener
+//    public void updateHostAvailability(EventCreatedEvent event) {
+//        var host = userRepository.findByUsername(event.getCreatedEvent().getHostUsername());
+//        if (host.isEmpty()) return;
+//        host.get().getAvailableDays().remove(event.getCreatedEvent().getDate());
+//        userRepository.save(host.get());
+//        log.info("[EventCreationListener] Available days updated. Date removed: {}", event.getCreatedEvent().getDate());
+//    }
 }
