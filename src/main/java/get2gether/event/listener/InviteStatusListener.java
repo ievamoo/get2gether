@@ -9,6 +9,7 @@ import get2gether.service.GroupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -19,6 +20,7 @@ public class InviteStatusListener {
     private final GroupService groupService;
     private final EventService eventService;
     private final InviteRepository inviteRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     @EventListener
@@ -50,7 +52,10 @@ public class InviteStatusListener {
             log.info("[InviteStatusListener]: Group invite rejected by user {}", receiver.getUsername());
             return;
         }
+
         groupService.addMember(invite.getTypeId(), receiver);
         log.info("[InviteStatusListener]: User {} added to group {}", receiver.getUsername(), invite.getTypeId());
+        var message = String.format("User %s joined the group", receiver.getUsername());
+        messagingTemplate.convertAndSend("/topic/group/" + invite.getTypeId(), message);
     }
 }
