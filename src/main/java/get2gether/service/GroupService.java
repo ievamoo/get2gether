@@ -192,4 +192,9 @@ public class GroupService {
                 .orElseThrow(() -> new ResourceNotFoundException(ResourceType.GROUP, "name: " + groupName));
     }
 
+    public Group getGroupByIdWithMembers(Long id) {
+        return groupRepository.findByIdWithMembers(id)
+                .orElseThrow(() -> new ResourceNotFoundException(ResourceType.GROUP, "id: " + id));
+    }
+
 }
