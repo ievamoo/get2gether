@@ -46,4 +46,8 @@ public class Group {
     private List<Event> events;
 
     private String groupColor;
+
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
+    private List<Message> messages;
 }

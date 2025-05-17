@@ -21,7 +21,6 @@ public class GroupLeaveEventListener {
     private final InviteRepository inviteRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-
     @EventListener
     public void handleGroupLeaveEvent(GroupLeaveEvent event) {
         var group = event.getLeftGroup();

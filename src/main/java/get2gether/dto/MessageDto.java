@@ -1,6 +1,5 @@
 package get2gether.dto;
 
-import get2gether.model.Type;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,9 +13,8 @@ import java.time.LocalDateTime;
 @Builder
 public class MessageDto {
     private Long id;
-    private Type type;
-    private Long typeId;
-    private Long senderId;
+    private GroupDto group;
+    private String senderUsername;
     private String message;
     private LocalDateTime createdAt;
 }

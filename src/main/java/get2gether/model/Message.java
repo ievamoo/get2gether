@@ -1,5 +1,6 @@
 package get2gether.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,9 +10,6 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "messages", indexes = {
-        @Index(name = "idx_message_type_typeid", columnList = "type, typeId")
-})
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,12 +20,12 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Enumerated(EnumType.STRING)
-    private Type type;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    @JsonManagedReference
+    private Group group;
 
-    private Long typeId;
-
-    private Long senderId;
+    private String senderUsername;
 
     private String message;
 
