@@ -7,15 +7,11 @@ import get2gether.model.Type;
 import get2gether.model.User;
 import get2gether.repository.InviteRepository;
 import get2gether.repository.UserRepository;
-import get2gether.service.InviteNotifierService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Component;
-
-import java.time.LocalDate;
 
 @Component
 @RequiredArgsConstructor

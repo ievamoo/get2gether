@@ -54,4 +54,9 @@ public class ManualUserMapper {
                 .build();
     }
 
+    public void updateCurrentUser(UserDto dto, User user) {
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+    }
+
 }

@@ -22,24 +22,20 @@ import java.util.Set;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final UserMapper userMapper;
-    private final GroupRepository groupRepository;
-    private final ManualGroupMapper manualGroupMapper;
     private final ManualUserMapper manualUserMapper;
 
 
     public UserDto getUserByUsername(String username) {
         var matchingUser = getUserFromDb(username);
-//        manualUserMapper.modelToDtoOnGroupCreate(matchingUser);
         return manualUserMapper.modelToDtoOnGetUser(matchingUser);
     }
 
     @Transactional
     public UserDto updateCurrentUser(String username, UserDto updatedUserDto) {
         var matchingUser = getUserFromDb(username);
-        userMapper.updateUserProfile(updatedUserDto, matchingUser);
+        manualUserMapper.updateCurrentUser(updatedUserDto, matchingUser);
         var savedUser = userRepository.save(matchingUser);
-        return userMapper.modelToDto(savedUser);
+        return manualUserMapper.modelToDtoOnGetUser(savedUser);
     }
 
     public User getUserFromDb(String username) {
