@@ -15,6 +15,7 @@ public class ManualGroupMapper {
 
     private final ManualUserMapper userMapper;
     private final ManualEventMapper manualEventMapper;
+    private final ManualMessageMapper manualMessageMapper;
 
     public GroupDto modelToDtoOnGroupCreate(Group group) {
         return GroupDto.builder()
@@ -40,6 +41,9 @@ public class ManualGroupMapper {
                         .map(manualEventMapper::modelToDtoOnGet)
                         .toList())
                 .groupColor(group.getGroupColor())
+                .messages(group.getMessages().stream()
+                        .map(manualMessageMapper::modelToDto)
+                        .toList())
                 .build();
 
     }

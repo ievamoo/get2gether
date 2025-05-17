@@ -3,7 +3,6 @@ package get2gether.security;
 import get2gether.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -12,18 +11,10 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.messaging.simp.user.SimpUser;
-import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Configuration
 @RequiredArgsConstructor
@@ -58,11 +49,10 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 String username = jwtUtil.extractUsername(jwt);
                 log.info("username: {}", username);
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
-                UsernamePasswordAuthenticationToken authenticatedUser = new UsernamePasswordAuthenticationToken(userDetails.getUsername(),
+                UsernamePasswordAuthenticationToken authenticatedUser = new UsernamePasswordAuthenticationToken(userDetails,
                         null,
                         userDetails.getAuthorities());
                 accessor.setUser(authenticatedUser); ///setting the context of the user as the principal
-
 
             }else{
                 log.info("Authorization header not present");
