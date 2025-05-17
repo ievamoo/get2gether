@@ -5,6 +5,7 @@ import get2gether.dto.UserDto;
 import get2gether.model.Role;
 import get2gether.model.User;
 
+import java.util.HashSet;
 import java.util.List;
 
 public final class TestData {
@@ -18,8 +19,11 @@ public final class TestData {
                 .lastName("TestLastName")
                 .password("encoded_password")
                 .roles(List.of(Role.USER))
+                .availableDays(new HashSet<>())
+                .groups(new HashSet<>())
                 .build();
     }
+
 
     public static UserDto getTestUserDto() {
         return UserDto.builder()
@@ -37,6 +41,8 @@ public final class TestData {
                 .firstName("UpdatedTestName")
                 .lastName("UpdatedTestLastName")
                 .roles(List.of(Role.USER))
+                .availableDays(new HashSet<>())
+                .groups(new HashSet<>())
                 .build();
     }
 

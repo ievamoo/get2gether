@@ -23,6 +23,9 @@ public class UserController {
     public ResponseEntity<UserDto> getCurrentUser(Authentication authentication) {
         var username = authentication.getName();
         var currentUser = userService.getUserByUsername(username);
+        if (currentUser == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(currentUser);
     }
 

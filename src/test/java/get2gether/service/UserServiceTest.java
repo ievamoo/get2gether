@@ -2,25 +2,26 @@ package get2gether.service;
 
 import get2gether.TestData;
 import get2gether.dto.UserDto;
+import get2gether.manualMapper.ManualUserMapper;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
 import get2gether.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-
+@ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
     @Mock
@@ -29,27 +30,29 @@ class UserServiceTest {
     @Mock
     private UserMapper userMapper;
 
+    @Mock
+    private ManualUserMapper manualUserMapper;
+
     @InjectMocks
     private UserService testUserService;
 
     private final User user = TestData.getTestUser();
     private final UserDto userDto = TestData.getTestUserDto();
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+
 
     @Test
     void getUserByUsername_shouldReturnUserDtoWhenUserExists() {
         when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
-        when(userMapper.modelToDto(user)).thenReturn(userDto);
+        when(manualUserMapper.modelToDtoOnGetUser(user)).thenReturn(userDto);
 
         var result = testUserService.getUserByUsername("test@gmail.com");
 
+        assertNotNull(result);
         assertEquals("test@gmail.com", result.getUsername());
         assertEquals("TestName", result.getFirstName());
     }
+
 
     @Test
     void getUserByUsername_shouldThrowExceptionIfUserNotFound() {
@@ -64,9 +67,10 @@ class UserServiceTest {
         var savedUser = TestData.getSavedUser();
         var savedUserDto = TestData.getSavedUserDto();
 
-        when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.ofNullable(user));
+        when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
+        doNothing().when(manualUserMapper).updateCurrentUser(any(UserDto.class), any(User.class));
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
-        when(userMapper.modelToDto(savedUser)).thenReturn(savedUserDto);
+        when(manualUserMapper.modelToDtoOnGetUser(savedUser)).thenReturn(savedUserDto);
 
         var result = testUserService.updateCurrentUser("test@gmail.com", savedUserDto);
 
@@ -75,6 +79,7 @@ class UserServiceTest {
         assertEquals("UpdatedTestLastName", result.getLastName());
         assertEquals("test@gmail.com", result.getUsername());
     }
+
 
     @Test
     void deleteUser_shouldDeleteUser() {
@@ -85,12 +90,11 @@ class UserServiceTest {
         verify(userRepository).delete(user);
     }
 
-
     @Test
     void getAllUsers_shouldReturnListOfUsersWhenUsersExist() {
         var users = List.of(user);
         when(userRepository.findAll()).thenReturn(users);
-        when(userMapper.modelToDto(user)).thenReturn(userDto);
+        when(manualUserMapper.modelToDtoOnGroupCreate(user)).thenReturn(userDto);
 
         var result = testUserService.getAllUsers();
 
@@ -98,13 +102,40 @@ class UserServiceTest {
         assertEquals("test@gmail.com", result.get(0).getUsername());
     }
 
+
     @Test
     void getAllUsers_shouldReturnEmptyListWhenNoUsers() {
-        when(userRepository.findAll()).thenReturn(new ArrayList<>());
+        when(userRepository.findAll()).thenReturn(Collections.emptyList());
 
         var result = testUserService.getAllUsers();
 
         assertEquals(0, result.size());
     }
 
+    @Test
+    void updateAvailableDays_shouldUpdateAndReturnUpdatedDays() {
+        Set<LocalDate> newDays = Set.of(LocalDate.of(2025, 5, 17), LocalDate.of(2025, 5, 18));
+
+        user.setAvailableDays(new HashSet<>());
+
+        when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Set<LocalDate> result = testUserService.updateAvailableDays("test@gmail.com", newDays);
+
+        assertEquals(newDays, result);
+        verify(userRepository).save(any(User.class));
+    }
+
+    @Test
+    void getAvailableDays_shouldReturnExistingDays() {
+        Set<LocalDate> existingDays = Set.of(LocalDate.of(2025, 5, 20));
+        user.setAvailableDays(existingDays);
+
+        when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
+
+        Set<LocalDate> result = testUserService.getAvailableDays("test@gmail.com");
+
+        assertEquals(existingDays, result);
+    }
 }
