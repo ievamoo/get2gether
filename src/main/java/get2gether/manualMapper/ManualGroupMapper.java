@@ -56,23 +56,6 @@ public class ManualGroupMapper {
                 .build();
     }
 
-    public GroupDto modelToDtoOnGroupLeave(Group group) {
-        return GroupDto.builder()
-                .id(group.getId())
-                .name(group.getName())
-                .build();
-    }
-
-    public GroupDto modelToDtoOnGetUser(Group group) {
-        return GroupDto.builder()
-                .id(group.getId())
-                .name(group.getName())
-                .events(group.getEvents().stream()
-                        .map(manualEventMapper::modelToDtoOnGet)
-                        .collect(Collectors.toList()))
-                .build();
-    }
-
     public Group dtoToModelOnGroupCreate(GroupDto dto, User user) {
         return Group.builder()
                 .name(dto.getName())

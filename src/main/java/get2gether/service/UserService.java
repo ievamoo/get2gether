@@ -23,19 +23,20 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final ManualUserMapper manualUserMapper;
+    private final UserMapper userMapper;
 
 
     public UserDto getUserByUsername(String username) {
         var matchingUser = getUserFromDb(username);
-        return manualUserMapper.modelToDtoOnGetUser(matchingUser);
+        return userMapper.modelToDtoOnGetUser(matchingUser);
     }
 
     @Transactional
     public UserDto updateCurrentUser(String username, UserDto updatedUserDto) {
         var matchingUser = getUserFromDb(username);
-        manualUserMapper.updateCurrentUser(updatedUserDto, matchingUser);
+        userMapper.updateCurrentUser(updatedUserDto, matchingUser);
         var savedUser = userRepository.save(matchingUser);
-        return manualUserMapper.modelToDtoOnGetUser(savedUser);
+        return userMapper.modelToDtoOnGetUser(savedUser);
     }
 
     public User getUserFromDb(String username) {
@@ -57,7 +58,7 @@ public class UserService {
     public List<UserDto> getAllUsers() {
         var users = userRepository.findAll();
         return users.stream()
-                .map(manualUserMapper::modelToDtoOnGroupCreate)
+                .map(userMapper::toDtoOnGroupCreate)
                 .toList();
     }
 
@@ -73,7 +74,4 @@ public class UserService {
         return matchingUser.getAvailableDays();
     }
 
-    public boolean userExistsByUsername(String username) {
-        return userRepository.existsByUsername(username);
-    }
 }

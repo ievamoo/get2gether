@@ -6,51 +6,48 @@ import get2gether.model.Group;
 import get2gether.model.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = {InviteMapper.class, EventMapper.class, GroupMapper.class})
 public interface UserMapper {
 
-    @Named("modelToDto")
-    @Mapping(source = "groups", target = "groups", qualifiedByName = "mapToGroupDto")
-    UserDto modelToDto(User user);
-
-    @Named("dtoToModel")
-    @Mapping(source = "groups", target = "groups", qualifiedByName = "mapToGroup")
-    User dtoToModel(UserDto dto);
-
-    default void updateUserProfile(UserDto dto, @MappingTarget User entity) {
-        entity.setFirstName(dto.getFirstName());
-        entity.setLastName(dto.getLastName());
+    default void updateCurrentUser(UserDto dto, User user) {
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
     }
 
-    @Named("mapToGroupDto")
-    default Set<GroupDto> mapToGroupDto(Set<Group> groups) {
-        if (groups == null) {
-            return null;
-        }
+    @Named("toDtoOnGroupCreate")
+    @Mapping(target = "availableDays", ignore = true)
+    @Mapping(target = "groups", ignore = true)
+    @Mapping(target = "invitesReceived", ignore = true)
+    @Mapping(target = "goingEvents", ignore = true)
+    UserDto toDtoOnGroupCreate(User user);
+
+
+    @Mapping(target = "groups", expression = "java(mapGroups(user.getGroups()))")
+    @Mapping(target = "invitesReceived", source = "invitesReceived")
+    @Mapping(target = "goingEvents", source = "goingEvents")
+    UserDto modelToDtoOnGetUser(User user);
+
+    default Set<GroupDto> mapGroups(Set<Group> groups) {
+        if (groups == null) return null;
         return groups.stream()
                 .map(group -> GroupDto.builder()
                         .id(group.getId())
                         .name(group.getName())
+                        .groupColor(group.getGroupColor())
                         .build())
                 .collect(Collectors.toSet());
     }
 
-    @Named("mapToGroup")
-    default Set<Group> mapToGroup(Set<GroupDto> groupDtos) {
-        if (groupDtos == null) {
-            return null;
-        }
-        return groupDtos.stream()
-                .map(dto -> Group.builder()
-                        .id(dto.getId())
-                        .name(dto.getName())
-                        .build())
-                .collect(Collectors.toSet());
-    }
+
+
+
+
+
+
+
 }
