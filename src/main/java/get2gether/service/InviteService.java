@@ -5,9 +5,8 @@ import get2gether.event.EventPublisher;
 import get2gether.event.InviteStatusChangedEvent;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
-import get2gether.manualMapper.ManualInviteMapper;
+import get2gether.mapper.InviteMapper;
 import get2gether.model.*;
-import get2gether.repository.GroupRepository;
 import get2gether.repository.InviteRepository;
 import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +26,7 @@ public class InviteService {
 
     private final InviteRepository inviteRepository;
     private final UserService userService;
-    private final ManualInviteMapper manualInviteMapper;
+    private final InviteMapper inviteMapper;
     private final GroupService groupService;
     private final EventPublisher eventPublisher;
     private final UserRepository userRepository;
@@ -71,8 +70,8 @@ public class InviteService {
 
     private void processGroupInviteCreation(Group group, User receiver, String senderName, Map<String, String> errorMessages) {
         checkIfInviteShouldBeSent(group, receiver, errorMessages);
-        var createdInvite = manualInviteMapper.dtoToModel(group.getId(), receiver, senderName, group.getName());
-        var inviteDto = manualInviteMapper.modelToDto(inviteRepository.save(createdInvite));
+        var createdInvite = inviteMapper.dtoToModel(group.getId(), receiver, senderName, group.getName());
+        var inviteDto = inviteMapper.modelToDto(inviteRepository.save(createdInvite));
         simpMessagingTemplate.convertAndSendToUser(receiver.getUsername(), "/queue/invites", inviteDto);
         log.info("[GroupService]: invites created for selected members.");
     }
@@ -109,9 +108,9 @@ public class InviteService {
         var inviteDtos = new ArrayList<InviteDto>();
 
         receivers.forEach(receiver -> {
-            var createdInvite = manualInviteMapper.dtoToModel(group.getId(), receiver, sender.getUsername(), group.getName());
+            var createdInvite = inviteMapper.dtoToModel(group.getId(), receiver, sender.getUsername(), group.getName());
             var savedInvite = inviteRepository.save(createdInvite);
-            inviteDtos.add(manualInviteMapper.modelToDto(savedInvite));
+            inviteDtos.add(inviteMapper.modelToDto(savedInvite));
             log.info("[GroupService]: invite created for member {}", receiver.getUsername());
         });
 

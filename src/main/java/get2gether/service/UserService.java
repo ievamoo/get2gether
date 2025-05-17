@@ -2,11 +2,8 @@ package get2gether.service;
 
 import get2gether.dto.UserDto;
 import get2gether.exception.ForbiddenActionException;
-import get2gether.manualMapper.ManualGroupMapper;
-import get2gether.manualMapper.ManualUserMapper;
 import get2gether.mapper.UserMapper;
 import get2gether.model.User;
-import get2gether.repository.GroupRepository;
 import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,9 +19,7 @@ import java.util.Set;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final ManualUserMapper manualUserMapper;
     private final UserMapper userMapper;
-
 
     public UserDto getUserByUsername(String username) {
         var matchingUser = getUserFromDb(username);
@@ -58,7 +53,7 @@ public class UserService {
     public List<UserDto> getAllUsers() {
         var users = userRepository.findAll();
         return users.stream()
-                .map(userMapper::toDtoOnGroupCreate)
+                .map(userMapper::modelToDtoOnGroupCreate)
                 .toList();
     }
 

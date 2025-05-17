@@ -1,4 +1,4 @@
-package get2gether.manualMapper;
+package get2gether.mapper;
 
 import get2gether.dto.MessageDto;
 import get2gether.exception.ResourceNotFoundException;
@@ -9,12 +9,11 @@ import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class ManualMessageMapper {
+public class MessageMapper {
 
     private final UserRepository userRepository;
 
