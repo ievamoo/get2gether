@@ -6,9 +6,13 @@ import get2gether.model.Role;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
 import get2gether.security.JwtUtil;
+import get2gether.service.UserService;
 import jakarta.transaction.Transactional;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,8 +23,18 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
+
+import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -30,6 +44,13 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Mock
+    private UserService userService;
+
+
+    @InjectMocks
+    private UserController userController;
 
     @Autowired
     private UserRepository userRepository;
@@ -73,12 +94,11 @@ class UserControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.get("/user")
                         .header("Authorization", "Bearer " + token)
                 )
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value("testuser@example.com"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("TestName"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value("TestLastName"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("testuser@example.com"))
+                .andExpect(jsonPath("$.firstName").value("TestName"))
+                .andExpect(jsonPath("$.lastName").value("TestLastName"));
     }
-
     @Test
     void updateCurrentUser() throws Exception {
         var updateDto = UserDto.builder()
@@ -90,17 +110,17 @@ class UserControllerTest {
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(MockMvcResultMatchers.status().isAccepted())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.username").value("testuser@example.com"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("UpdatedName"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value("UpdatedLastName"));
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.username").value("testuser@example.com"))
+                .andExpect(jsonPath("$.firstName").value("UpdatedName"))
+                .andExpect(jsonPath("$.lastName").value("UpdatedLastName"));
     }
 
     @Test
     void deleteCurrentUser() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.delete("/user")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(MockMvcResultMatchers.status().isNoContent());
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -126,12 +146,56 @@ class UserControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/user/all")
                         .header("Authorization", "Bearer " + token))
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.[0].username").value("testuser@example.com"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.[0].firstName").value("TestName"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.[0].lastName").value("TestLastName"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.[1].username").value("testAdmin@gmail.com"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.[1].firstName").value("TestAdminName"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.[1].lastName").value("TestAdminLastName"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.[0].username").value("testuser@example.com"))
+                .andExpect(jsonPath("$.[0].firstName").value("TestName"))
+                .andExpect(jsonPath("$.[0].lastName").value("TestLastName"))
+                .andExpect(jsonPath("$.[1].username").value("testAdmin@gmail.com"))
+                .andExpect(jsonPath("$.[1].firstName").value("TestAdminName"))
+                .andExpect(jsonPath("$.[1].lastName").value("TestAdminLastName"));
     }
+    @Test
+    void setAvailableDays() throws Exception {
+        Set<LocalDate> availableDays = Set.of(
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(2)
+        );
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/user/availability")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(availableDays)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+    @Test
+    void getAvailableDays() throws Exception {
+        Set<LocalDate> availableDays = Set.of(
+                LocalDate.now().plusDays(1),
+                LocalDate.now().plusDays(2)
+        );
+
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/user/availability")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(availableDays)))
+                .andExpect(status().isOk());
+
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/user/availability")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+    @Test
+    void getAvailableDays_shouldReturnEmptySetIfNoneSet() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/user/availability")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+
+
 }
