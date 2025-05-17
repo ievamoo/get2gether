@@ -2,7 +2,7 @@ package get2gether.service;
 
 import get2gether.dto.MessageDto;
 import get2gether.exception.ForbiddenActionException;
-import get2gether.manualMapper.ManualMessageMapper;
+import get2gether.mapper.MessageMapper;
 import get2gether.repository.MessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 public class MessageService {
 
     private final MessageRepository messageRepository;
-    private final ManualMessageMapper manualMessageMapper;
+    private final MessageMapper messageMapper;
     private final GroupService groupService;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -28,9 +28,9 @@ public class MessageService {
         if (!isMember) {
             throw new ForbiddenActionException("Only group members are allowed to send messages.");
         }
-        var savedMessage = messageRepository.save(manualMessageMapper.dtoToModel(messageDto, username, group));
+        var savedMessage = messageRepository.save(messageMapper.dtoToModel(messageDto, username, group));
         var destination = "/topic/group/" + group.getId() + "/chat";
-        messagingTemplate.convertAndSend(destination, manualMessageMapper.modelToDto(savedMessage));
+        messagingTemplate.convertAndSend(destination, messageMapper.modelToDto(savedMessage));
     }
 
 }

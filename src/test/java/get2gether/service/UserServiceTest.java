@@ -2,11 +2,9 @@ package get2gether.service;
 
 import get2gether.TestData;
 import get2gether.dto.UserDto;
-import get2gether.manualMapper.ManualUserMapper;
+import get2gether.mapper.UserMapper;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
-import get2gether.mapper.UserMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -30,9 +28,6 @@ class UserServiceTest {
     @Mock
     private UserMapper userMapper;
 
-    @Mock
-    private ManualUserMapper manualUserMapper;
-
     @InjectMocks
     private UserService testUserService;
 
@@ -44,7 +39,7 @@ class UserServiceTest {
     @Test
     void getUserByUsername_shouldReturnUserDtoWhenUserExists() {
         when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
-        when(manualUserMapper.modelToDtoOnGetUser(user)).thenReturn(userDto);
+        when(userMapper.modelToDtoOnGetUser(user)).thenReturn(userDto);
 
         var result = testUserService.getUserByUsername("test@gmail.com");
 
@@ -68,9 +63,9 @@ class UserServiceTest {
         var savedUserDto = TestData.getSavedUserDto();
 
         when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
-        doNothing().when(manualUserMapper).updateCurrentUser(any(UserDto.class), any(User.class));
+        doNothing().when(userMapper).updateCurrentUser(any(UserDto.class), any(User.class));
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
-        when(manualUserMapper.modelToDtoOnGetUser(savedUser)).thenReturn(savedUserDto);
+        when(userMapper.modelToDtoOnGetUser(savedUser)).thenReturn(savedUserDto);
 
         var result = testUserService.updateCurrentUser("test@gmail.com", savedUserDto);
 
@@ -94,7 +89,7 @@ class UserServiceTest {
     void getAllUsers_shouldReturnListOfUsersWhenUsersExist() {
         var users = List.of(user);
         when(userRepository.findAll()).thenReturn(users);
-        when(manualUserMapper.modelToDtoOnGroupCreate(user)).thenReturn(userDto);
+        when(userMapper.modelToDtoOnGroupCreate(user)).thenReturn(userDto);
 
         var result = testUserService.getAllUsers();
 

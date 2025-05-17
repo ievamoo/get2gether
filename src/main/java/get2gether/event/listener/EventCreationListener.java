@@ -1,7 +1,7 @@
 package get2gether.event.listener;
 
 import get2gether.event.EventCreatedEvent;
-import get2gether.manualMapper.ManualInviteMapper;
+import get2gether.mapper.InviteMapper;
 import get2gether.model.Invite;
 import get2gether.model.Type;
 import get2gether.model.User;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 public class EventCreationListener {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final ManualInviteMapper manualInviteMapper;
+    private final InviteMapper inviteMapper;
     private final InviteRepository inviteRepository;
     private final UserRepository userRepository;
 
@@ -47,7 +47,7 @@ public class EventCreationListener {
                     var savedInvite = inviteRepository.save(invite);
                     log.info("[EventCreationListener] Invite saved for user: {}", user.getUsername());
 
-                    var inviteDto = manualInviteMapper.modelToDto(savedInvite);
+                    var inviteDto = inviteMapper.modelToDto(savedInvite);
                     messagingTemplate.convertAndSendToUser(user.getUsername(), "/queue/invites", inviteDto);
 
 //                    inviteNotifierService.sendInviteToUser(inviteDto);

@@ -11,9 +11,9 @@ import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceAlreadyExistsException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.exception.UserNotFoundException;
-import get2gether.manualMapper.ManualEventMapper;
-import get2gether.manualMapper.ManualGroupMapper;
-import get2gether.manualMapper.ManualUserMapper;
+import get2gether.mapper.EventMapper;
+import get2gether.mapper.GroupMapper;
+import get2gether.mapper.UserMapper;
 import get2gether.model.Event;
 import get2gether.model.Group;
 import get2gether.model.ResourceType;
@@ -23,7 +23,6 @@ import get2gether.repository.GroupRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,18 +40,17 @@ public class GroupService {
 
     private final GroupRepository groupRepository;
     private final UserService userService;
-    private final ManualGroupMapper manualGroupMapper;
-    private final ManualUserMapper manualUserMapper;
-    private final ManualEventMapper manualEventMapper;
+    private final GroupMapper groupMapper;
+    private final UserMapper userMapper;
+    private final EventMapper eventMapper;
     private final EventPublisher eventPublisher;
-    private final SimpMessagingTemplate simpMessagingTemplate;
     private final EventRepository eventRepository;
 
 
     public GroupDto getGroupById(Long id) {
         var foundGroup = getGroupByIdFromDb(id);
         var availableDays = groupAvailableDays(foundGroup.getMembers());
-        return manualGroupMapper.modelToDtoOnGet(foundGroup).setGroupAvailability(availableDays);
+        return groupMapper.modelToDtoOnGet(foundGroup).setGroupAvailability(availableDays);
     }
 
     @Transactional
@@ -61,10 +59,10 @@ public class GroupService {
             throw new ResourceAlreadyExistsException(ResourceType.GROUP, "name: " + groupDto.getName());
         }
         var currentUser = userService.getUserFromDb(username);
-        var group = manualGroupMapper.dtoToModelOnGroupCreate(groupDto, currentUser);
+        var group = groupMapper.dtoToModelOnGroupCreate(groupDto, currentUser);
         var savedGroup = groupRepository.save(group);
         eventPublisher.publishGroupCreatedEvent(new GroupCreatedEvent(this, savedGroup, groupDto.getInvitedUsernames()));
-        return manualGroupMapper.modelToDtoOnGroupCreate(savedGroup);
+        return groupMapper.modelToDtoOnGroupCreate(savedGroup);
     }
 
     @Transactional
@@ -72,7 +70,7 @@ public class GroupService {
         var group = getGroupByIdFromDb(id);
         group.setName(editedGroup.getName()).setGroupColor(editedGroup.getGroupColor());
         var updatedGroup = groupRepository.save(group);
-        return manualGroupMapper.modelToDtoOnUpdate(updatedGroup);
+        return groupMapper.modelToDtoOnUpdate(updatedGroup);
     }
 
     @Transactional
@@ -104,7 +102,7 @@ public class GroupService {
         group.getMembers().remove(userToDelete);
         var updatedMemberList = groupRepository.save(group).getMembers();
         return updatedMemberList.stream()
-                .map(manualUserMapper::modelToDtoOnGroupCreate)
+                .map(userMapper::modelToDtoOnGroupCreate)
                 .collect(Collectors.toSet());
 
     }
@@ -144,7 +142,7 @@ public class GroupService {
     public List<EventDto> getAllGroupEvents(Long groupId) {
         var group = getGroupByIdFromDb(groupId);
         return group.getEvents().stream()
-                .map(manualEventMapper::modelToDtoOnGet).toList();
+                .map(eventMapper::modelToDtoOnGet).toList();
     }
 
     public void checkIfUserExistsInGroup(Group group, User userToDelete) {
@@ -176,7 +174,7 @@ public class GroupService {
                 .flatMap(member -> member.getAvailableDays().stream()
                         .map(date -> Map.entry(
                                 date,
-                                manualUserMapper.modelToDtoOnGroupCreate(member)
+                                userMapper.modelToDtoOnGroupCreate(member)
                         )))
                 .collect(Collectors.groupingBy(
                         Map.Entry::getKey,

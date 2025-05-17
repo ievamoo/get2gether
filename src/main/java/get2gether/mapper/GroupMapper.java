@@ -1,52 +1,67 @@
 package get2gether.mapper;
 
 import get2gether.dto.GroupDto;
-import get2gether.dto.UserDto;
 import get2gether.model.Group;
 import get2gether.model.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Named;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
-public interface GroupMapper {
+@Service
+@RequiredArgsConstructor
+public class GroupMapper {
 
-    @Named("modelToDto")
-    @Mapping(source = "members", target = "members", qualifiedByName = "mapToMemberDto")
-    GroupDto modelToDto(Group group);
+    private final UserMapper userMapper;
+    private final EventMapper eventMapper;
+    private final MessageMapper messageMapper;
 
-    @Named("dtoToModel")
-    @Mapping(source = "members", target = "members", qualifiedByName = "mapToMembers")
-    Group dtoToModel(GroupDto dto);
-
-    Group dtoToModelOnGroupCreate(GroupDto dto);
-
-    @Named("mapToMemberDto")
-    default Set<UserDto> mapToMemberDto(Set<User> users) {
-        if (users == null) {
-            return null;
-        }
-        return users.stream()
-                .map(user -> UserDto.builder()
-                        .id(user.getId())
-                        .username(user.getUsername())
-                        .build())
-                .collect(Collectors.toSet());
+    public GroupDto modelToDtoOnGroupCreate(Group group) {
+        return GroupDto.builder()
+                .id(group.getId())
+                .admin(userMapper.modelToDtoOnGroupCreate(group.getAdmin()))
+                .name(group.getName())
+                .members(group.getMembers().stream()
+                        .map(userMapper::modelToDtoOnGroupCreate)
+                        .collect(Collectors.toSet()))
+                .groupColor(group.getGroupColor())
+                .build();
     }
 
-    @Named("mapToMembers")
-    default Set<User> mapToMembers(Set<UserDto> userDtos) {
-        if (userDtos == null) {
-            return null;
-        }
-        return userDtos.stream()
-                .map(dto -> User.builder()
-                        .id(dto.getId())
-                        .username(dto.getUsername())
-                        .build())
-                .collect(Collectors.toSet());
+    public GroupDto modelToDtoOnGet(Group group) {
+        return GroupDto.builder()
+                .id(group.getId())
+                .admin(userMapper.modelToDtoOnGroupCreate(group.getAdmin()))
+                .name(group.getName())
+                .members(group.getMembers().stream()
+                        .map(userMapper::modelToDtoOnGroupCreate)
+                        .collect(Collectors.toSet()))
+                .events(group.getEvents().stream()
+                        .map(eventMapper::modelToDtoOnGet)
+                        .toList())
+                .groupColor(group.getGroupColor())
+                .messages(group.getMessages().stream()
+                        .map(messageMapper::modelToDto)
+                        .toList())
+                .build();
+
+    }
+
+    public GroupDto modelToDtoOnUpdate(Group group) {
+        return GroupDto.builder()
+                .id(group.getId())
+                .name(group.getName())
+                .groupColor(group.getGroupColor())
+                .build();
+    }
+
+    public Group dtoToModelOnGroupCreate(GroupDto dto, User user) {
+        return Group.builder()
+                .name(dto.getName())
+                .admin(user)
+                .members(Set.of(user))
+                .groupColor(dto.getGroupColor())
+                .build();
     }
 }
