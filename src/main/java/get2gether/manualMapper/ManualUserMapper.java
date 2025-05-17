@@ -22,9 +22,6 @@ public class ManualUserMapper {
                 .username(user.getUsername())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-//                .invitesReceived(user.getInvitesReceived().stream()
-//                        .map(manualInviteMapper::modelToDto)
-//                        .toList())
                 .build();
     }
 
@@ -39,9 +36,6 @@ public class ManualUserMapper {
                         .map(group -> GroupDto.builder()
                                 .id(group.getId())
                                 .name(group.getName())
-//                                .events(group.getEvents().stream()
-//                                        .map(manualEventMapper::modelToDtoOnGet)
-//                                        .collect(Collectors.toList()))
                                 .groupColor(group.getGroupColor())
                                 .build())
                         .collect(Collectors.toSet()))
