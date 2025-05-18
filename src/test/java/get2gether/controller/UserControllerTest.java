@@ -144,15 +144,25 @@ class UserControllerTest {
 
         var token = jwtUtil.generateToken(adminUserDetails);
 
+        var user2 = User.builder()
+                .username("user2@gmail.com")
+                .firstName("user2firstName")
+                .lastName("user2lastName")
+                .password(passwordEncoder.encode("user2123"))
+                .roles(List.of(Role.USER))
+                .build();
+
+        userRepository.save(user2);
+
         mockMvc.perform(MockMvcRequestBuilders.get("/user/all")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.[0].username").value("testuser@example.com"))
                 .andExpect(jsonPath("$.[0].firstName").value("TestName"))
                 .andExpect(jsonPath("$.[0].lastName").value("TestLastName"))
-                .andExpect(jsonPath("$.[1].username").value("testAdmin@gmail.com"))
-                .andExpect(jsonPath("$.[1].firstName").value("TestAdminName"))
-                .andExpect(jsonPath("$.[1].lastName").value("TestAdminLastName"));
+                .andExpect(jsonPath("$.[1].username").value("user2@gmail.com"))
+                .andExpect(jsonPath("$.[1].firstName").value("user2firstName"))
+                .andExpect(jsonPath("$.[1].lastName").value("user2lastName"));
     }
     @Test
     void setAvailableDays() throws Exception {
