@@ -45,7 +45,6 @@ public class EventMapper {
     }
 
     public void updateEvent(EventDto dto, Event event) {
-        event.setDate(dto.getDate());
         event.setName(dto.getName());
         event.setDescription(dto.getDescription());
     }

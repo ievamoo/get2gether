@@ -10,7 +10,6 @@ import get2gether.event.GroupLeaveEvent;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceAlreadyExistsException;
 import get2gether.exception.ResourceNotFoundException;
-import get2gether.exception.UserNotFoundException;
 import get2gether.mapper.EventMapper;
 import get2gether.mapper.GroupMapper;
 import get2gether.mapper.UserMapper;
@@ -115,7 +114,7 @@ public class GroupService {
         User currentUser = userService.getUserFromDb(username);
 
         if (!groupToLeave.getMembers().contains(currentUser)) {
-            throw new UserNotFoundException("User not found in group with username " + currentUser.getUsername());
+            throw new ResourceNotFoundException(ResourceType.USER,"username: " + currentUser.getUsername());
         }
 
         checkIfAdmin(username, groupToLeave);
@@ -147,7 +146,7 @@ public class GroupService {
 
     public void checkIfUserExistsInGroup(Group group, User userToDelete) {
         if (!group.getMembers().contains(userToDelete)) {
-            throw new UserNotFoundException("User not found in group with username" + userToDelete.getUsername());
+            throw new ResourceNotFoundException(ResourceType.USER,"username: " + userToDelete.getUsername());
         }
     }
 

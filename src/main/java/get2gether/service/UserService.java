@@ -2,7 +2,10 @@ package get2gether.service;
 
 import get2gether.dto.UserDto;
 import get2gether.exception.ForbiddenActionException;
+import get2gether.exception.ResourceNotFoundException;
 import get2gether.mapper.UserMapper;
+import get2gether.model.ResourceType;
+import get2gether.model.Role;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +39,7 @@ public class UserService {
 
     public User getUserFromDb(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found:" + username));
+                .orElseThrow(() -> new ResourceNotFoundException(ResourceType.USER,"username: "+ username));
     }
 
     @Transactional
@@ -53,6 +56,7 @@ public class UserService {
     public List<UserDto> getAllUsers() {
         var users = userRepository.findAll();
         return users.stream()
+                .filter(user -> user.getRoles().contains(Role.USER))
                 .map(userMapper::modelToDtoOnGroupCreate)
                 .toList();
     }
