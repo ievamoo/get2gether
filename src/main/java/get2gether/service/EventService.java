@@ -5,7 +5,7 @@ import get2gether.dto.EventStatusDto;
 import get2gether.event.*;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
-import get2gether.manualMapper.ManualEventMapper;
+import get2gether.mapper.EventMapper;
 import get2gether.model.*;
 import get2gether.repository.EventRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class EventService {
 
     private final EventRepository eventRepository;
     private final GroupService groupService;
-    private final ManualEventMapper manualEventMapper;
+    private final EventMapper eventMapper;
     private final EventPublisher eventPublisher;
     private final UserService userService;
     private final InviteService inviteService;
@@ -33,13 +33,13 @@ public class EventService {
     public EventDto createEvent(EventDto eventDto, String username) {
         checkIfDateValid(eventDto.getDate());
         var group = groupService.findByName(eventDto.getGroupName());
-        var event = manualEventMapper.dtoToModel(eventDto);
+        var event = eventMapper.dtoToModel(eventDto);
         var host = userService.getUserFromDb(username);
         event.setGroup(group).setHostUsername(username).setGoingMembers(Set.of(host));
         var savedEvent = eventRepository.save(event);
         eventPublisher.publishEventCreatedEvent(new EventCreatedEvent(this, savedEvent));
         eventPublisher.publishEventAttendanceChangedEvent(new EventAttendanceChangedEvent(this, savedEvent.getDate(), host, true));
-        return manualEventMapper.modelToDtoOnGet(savedEvent);
+        return eventMapper.modelToDtoOnGet(savedEvent);
     }
 
     private void checkIfDateValid(LocalDate eventDate ) {
@@ -53,9 +53,9 @@ public class EventService {
         checkIfDateValid(eventDto.getDate());
         var event = getEventByIdFromDb(eventId);
         checkIfUserIsAHost(username, event.getHostUsername());
-        manualEventMapper.updateEvent(eventDto, event);
+        eventMapper.updateEvent(eventDto, event);
         var savedEvent = eventRepository.save(event);
-        return manualEventMapper.modelToDtoOnGet(eventRepository.save(savedEvent));
+        return eventMapper.modelToDtoOnGet(eventRepository.save(savedEvent));
     }
 
     @Transactional
@@ -103,7 +103,7 @@ public class EventService {
             removeUserFromEvent(eventId, user);
         }
         return userService.getUserFromDb(username).getGoingEvents().stream()
-                .map(manualEventMapper::modelToDtoOnGet)
+                .map(eventMapper::modelToDtoOnGet)
                 .toList();
     }
 

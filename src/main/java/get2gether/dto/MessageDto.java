@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 public class MessageDto {
     private Long id;
-    private GroupDto group;
+    private Long groupId;
     private String senderUsername;
     private String message;
     private LocalDateTime createdAt;

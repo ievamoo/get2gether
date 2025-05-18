@@ -2,11 +2,11 @@ package get2gether.service;
 
 import get2gether.dto.UserDto;
 import get2gether.exception.ForbiddenActionException;
-import get2gether.manualMapper.ManualGroupMapper;
-import get2gether.manualMapper.ManualUserMapper;
+import get2gether.exception.ResourceNotFoundException;
 import get2gether.mapper.UserMapper;
+import get2gether.model.ResourceType;
+import get2gether.model.Role;
 import get2gether.model.User;
-import get2gether.repository.GroupRepository;
 import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,25 +22,24 @@ import java.util.Set;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final ManualUserMapper manualUserMapper;
-
+    private final UserMapper userMapper;
 
     public UserDto getUserByUsername(String username) {
         var matchingUser = getUserFromDb(username);
-        return manualUserMapper.modelToDtoOnGetUser(matchingUser);
+        return userMapper.modelToDtoOnGetUser(matchingUser);
     }
 
     @Transactional
     public UserDto updateCurrentUser(String username, UserDto updatedUserDto) {
         var matchingUser = getUserFromDb(username);
-        manualUserMapper.updateCurrentUser(updatedUserDto, matchingUser);
+        userMapper.updateCurrentUser(updatedUserDto, matchingUser);
         var savedUser = userRepository.save(matchingUser);
-        return manualUserMapper.modelToDtoOnGetUser(savedUser);
+        return userMapper.modelToDtoOnGetUser(savedUser);
     }
 
     public User getUserFromDb(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found:" + username));
+                .orElseThrow(() -> new ResourceNotFoundException(ResourceType.USER,"username: "+ username));
     }
 
     @Transactional
@@ -57,7 +56,8 @@ public class UserService {
     public List<UserDto> getAllUsers() {
         var users = userRepository.findAll();
         return users.stream()
-                .map(manualUserMapper::modelToDtoOnGroupCreate)
+                .filter(user -> user.getRoles().contains(Role.USER))
+                .map(userMapper::modelToDtoOnGroupCreate)
                 .toList();
     }
 
@@ -73,7 +73,4 @@ public class UserService {
         return matchingUser.getAvailableDays();
     }
 
-    public boolean userExistsByUsername(String username) {
-        return userRepository.existsByUsername(username);
-    }
 }

@@ -42,8 +42,6 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 
-    //TODO patikrinti, ar statusas jau nera toks, koki paduoda
-
     @PatchMapping("/{eventId}/status")
     public ResponseEntity<List<EventDto>> toggleEventAttendance(
             Authentication authentication,

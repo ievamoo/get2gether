@@ -1,4 +1,4 @@
-package get2gether.manualMapper;
+package get2gether.mapper;
 
 import get2gether.dto.InviteDto;
 import get2gether.exception.ResourceNotFoundException;
@@ -13,7 +13,7 @@ import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
-public class ManualInviteMapper {
+public class InviteMapper {
 
     private final UserRepository userRepository;
     private final EventRepository eventRepository;

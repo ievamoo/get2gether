@@ -2,55 +2,55 @@ package get2gether.mapper;
 
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
-import get2gether.model.Group;
 import get2gether.model.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.Named;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
-import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
-public interface UserMapper {
 
-    @Named("modelToDto")
-    @Mapping(source = "groups", target = "groups", qualifiedByName = "mapToGroupDto")
-    UserDto modelToDto(User user);
+@Service
+@RequiredArgsConstructor
+public class UserMapper {
 
-    @Named("dtoToModel")
-    @Mapping(source = "groups", target = "groups", qualifiedByName = "mapToGroup")
-    User dtoToModel(UserDto dto);
+    private final InviteMapper inviteMapper;
+    private final EventMapper eventMapper;
 
-    default void updateUserProfile(UserDto dto, @MappingTarget User entity) {
-        entity.setFirstName(dto.getFirstName());
-        entity.setLastName(dto.getLastName());
+    public UserDto modelToDtoOnGroupCreate(User user) {
+        return UserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .build();
     }
 
-    @Named("mapToGroupDto")
-    default Set<GroupDto> mapToGroupDto(Set<Group> groups) {
-        if (groups == null) {
-            return null;
-        }
-        return groups.stream()
-                .map(group -> GroupDto.builder()
-                        .id(group.getId())
-                        .name(group.getName())
-                        .build())
-                .collect(Collectors.toSet());
+    public UserDto modelToDtoOnGetUser(User user) {
+        return UserDto.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .availableDays(user.getAvailableDays())
+                .groups(user.getGroups().stream()
+                        .map(group -> GroupDto.builder()
+                                .id(group.getId())
+                                .name(group.getName())
+                                .groupColor(group.getGroupColor())
+                                .build())
+                        .collect(Collectors.toSet()))
+                .invitesReceived(user.getInvitesReceived().stream()
+                        .map(inviteMapper::modelToDto)
+                        .toList())
+                .goingEvents(user.getGoingEvents().stream().map(
+                        eventMapper::modelToDtoOnGet
+                ).collect(Collectors.toList()))
+                .build();
     }
 
-    @Named("mapToGroup")
-    default Set<Group> mapToGroup(Set<GroupDto> groupDtos) {
-        if (groupDtos == null) {
-            return null;
-        }
-        return groupDtos.stream()
-                .map(dto -> Group.builder()
-                        .id(dto.getId())
-                        .name(dto.getName())
-                        .build())
-                .collect(Collectors.toSet());
+    public void updateCurrentUser(UserDto dto, User user) {
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
     }
+
 }

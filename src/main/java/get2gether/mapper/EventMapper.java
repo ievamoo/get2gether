@@ -1,10 +1,9 @@
-package get2gether.manualMapper;
+package get2gether.mapper;
 
 import get2gether.dto.EventDto;
 import get2gether.dto.UserDto;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.model.Event;
-import get2gether.model.Group;
 import get2gether.model.ResourceType;
 import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +13,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ManualEventMapper {
+public class EventMapper {
 
     private final UserRepository userRepository;
 
@@ -46,7 +45,6 @@ public class ManualEventMapper {
     }
 
     public void updateEvent(EventDto dto, Event event) {
-        event.setDate(dto.getDate());
         event.setName(dto.getName());
         event.setDescription(dto.getDescription());
     }
