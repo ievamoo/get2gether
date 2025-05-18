@@ -2,6 +2,7 @@ package get2gether.service;
 
 import get2gether.TestData;
 import get2gether.exception.RegistrationException;
+import get2gether.exception.ResourceNotFoundException;
 import get2gether.repository.UserRepository;
 import get2gether.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +76,7 @@ class AuthServiceTest {
     void authenticateAndGenerateToken_whenUserDoesNotExist() {
         when(userRepository.existsByUsername("test@gmail.com")).thenReturn(false);
 
-        assertThrows(UsernameNotFoundException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> testAuthService.authenticateAndGenerateToken("test@gmail.com", "password"));
     }
 

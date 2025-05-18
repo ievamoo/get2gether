@@ -44,7 +44,7 @@ class UserServiceTest {
     @Test
     void getUserByUsername_shouldReturnUserDtoWhenUserExists() {
         when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
-        when(manualUserMapper.modelToDtoOnGetUser(user)).thenReturn(userDto);
+        when(userMapper.modelToDto(user)).thenReturn(userDto);
 
         var result = testUserService.getUserByUsername("test@gmail.com");
 
@@ -68,9 +68,9 @@ class UserServiceTest {
         var savedUserDto = TestData.getSavedUserDto();
 
         when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
-        doNothing().when(manualUserMapper).updateCurrentUser(any(UserDto.class), any(User.class));
+        doNothing().when(userMapper).updateUserProfile(any(UserDto.class), any(User.class));
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
-        when(manualUserMapper.modelToDtoOnGetUser(savedUser)).thenReturn(savedUserDto);
+        when(userMapper.modelToDto(savedUser)).thenReturn(savedUserDto);
 
         var result = testUserService.updateCurrentUser("test@gmail.com", savedUserDto);
 
@@ -94,7 +94,7 @@ class UserServiceTest {
     void getAllUsers_shouldReturnListOfUsersWhenUsersExist() {
         var users = List.of(user);
         when(userRepository.findAll()).thenReturn(users);
-        when(manualUserMapper.modelToDtoOnGroupCreate(user)).thenReturn(userDto);
+        when(userMapper.modelToDto(user)).thenReturn(userDto);
 
         var result = testUserService.getAllUsers();
 
