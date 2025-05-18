@@ -8,7 +8,6 @@ import get2gether.repository.UserRepository;
 import get2gether.security.JwtUtil;
 import get2gether.service.UserService;
 import jakarta.transaction.Transactional;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,17 +21,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -162,7 +155,8 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.[0].lastName").value("TestLastName"))
                 .andExpect(jsonPath("$.[1].username").value("user2@gmail.com"))
                 .andExpect(jsonPath("$.[1].firstName").value("user2firstName"))
-                .andExpect(jsonPath("$.[1].lastName").value("user2lastName"));
+                .andExpect(jsonPath("$.[1].lastName").value("user2lastName"))
+                .andExpect(jsonPath("$[?(@.username == 'admin@example.com')]").doesNotExist());
     }
     @Test
     void setAvailableDays() throws Exception {
