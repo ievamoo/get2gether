@@ -20,6 +20,7 @@ public class EventDto {
     private Long id;
     private String name;
     private String hostUsername;
+    private String hostFullName;
     private LocalDate date;
     private String description;
     private String groupName;
