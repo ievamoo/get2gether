@@ -59,7 +59,7 @@ public class GroupDeletionListener {
                 .filter(receiverUsername -> !Objects.equals(receiverUsername, event.getDeletedGroup().getAdmin().getUsername()))
                 .forEach(receiverUsername -> {
                     log.info("Current user {} ", receiverUsername);
-                    messagingTemplate.convertAndSendToUser(receiverUsername, "/queue/group-deleted", "deleted");
+                    messagingTemplate.convertAndSendToUser(receiverUsername, "/queue/group-deleted", String.valueOf(event.getDeletedGroup().getId()));
                 });
     }
 
