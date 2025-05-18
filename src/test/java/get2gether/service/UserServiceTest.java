@@ -2,6 +2,8 @@ package get2gether.service;
 
 import get2gether.TestData;
 import get2gether.dto.UserDto;
+import get2gether.exception.ResourceNotFoundException;
+import get2gether.model.ResourceType;
 import get2gether.mapper.UserMapper;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
@@ -10,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -54,7 +55,7 @@ class UserServiceTest {
         var username = "user@mail.com";
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class, () -> testUserService.getUserByUsername(username));
+        assertThrows(ResourceNotFoundException.class, () -> testUserService.getUserByUsername(username));
     }
 
     @Test
@@ -132,5 +133,28 @@ class UserServiceTest {
         Set<LocalDate> result = testUserService.getAvailableDays("test@gmail.com");
 
         assertEquals(existingDays, result);
+    }
+
+    @Test
+    void getUserFromDb_shouldReturnUserWhenUserExists() {
+        when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
+
+        var result = testUserService.getUserFromDb("test@gmail.com");
+
+        assertNotNull(result);
+        assertEquals("test@gmail.com", result.getUsername());
+        assertEquals("TestName", result.getFirstName());
+        assertEquals("TestLastName", result.getLastName());
+    }
+
+    @Test
+    void getUserFromDb_shouldThrowExceptionWhenUserNotFound() {
+        String username = "nonexistent@gmail.com";
+        when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
+
+        var exception = assertThrows(ResourceNotFoundException.class,
+                () -> testUserService.getUserFromDb(username));
+        
+        assertEquals("USER not found with username: " + username, exception.getMessage());
     }
 }
