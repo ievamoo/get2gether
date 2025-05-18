@@ -38,13 +38,6 @@ class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Mock
-    private UserService userService;
-
-
-    @InjectMocks
-    private UserController userController;
-
     @Autowired
     private UserRepository userRepository;
 
