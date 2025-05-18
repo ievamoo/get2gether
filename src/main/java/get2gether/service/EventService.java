@@ -49,13 +49,12 @@ public class EventService {
     }
 
     @Transactional
-    public EventDto updateEvent(EventDto eventDto, String username, Long eventId) {
-        checkIfDateValid(eventDto.getDate());
+    public void updateEvent(EventDto eventDto, String username, Long eventId) {
         var event = getEventByIdFromDb(eventId);
         checkIfUserIsAHost(username, event.getHostUsername());
         eventMapper.updateEvent(eventDto, event);
         var savedEvent = eventRepository.save(event);
-        return eventMapper.modelToDtoOnGet(eventRepository.save(savedEvent));
+        log.info("updated name: {}, updated description: {}", savedEvent.getName(), savedEvent.getDescription());
     }
 
     @Transactional
@@ -94,20 +93,18 @@ public class EventService {
         log.info("[EventService]: removed {} to event", receiver.getUsername());
     }
 
-    public List<EventDto> toggleEventAttendance(String username, Long eventId, EventStatusDto dto) {
+    public void toggleEventAttendance(String username, Long eventId, EventStatusDto dto) {
         var user = userService.getUserFromDb(username);
-        checkForPendingInvites(eventId, dto, user);
+        checkForPendingInvites(eventId, user);
         if (dto.getIsGoing()) {
             addUserToEvent(eventId, user);
         } else {
             removeUserFromEvent(eventId, user);
         }
-        return userService.getUserFromDb(username).getGoingEvents().stream()
-                .map(eventMapper::modelToDtoOnGet)
-                .toList();
+
     }
 
-    private void checkForPendingInvites(Long eventId, EventStatusDto dto, User user) {
+    private void checkForPendingInvites(Long eventId, User user) {
         var pendingEventInvite = inviteService.findByReceiverAndTypeAndTypeId(user, Type.EVENT, eventId);
         pendingEventInvite.ifPresent(invite -> inviteService.deleteInvite(List.of(invite)));
     }

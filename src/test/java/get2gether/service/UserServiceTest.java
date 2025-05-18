@@ -35,8 +35,6 @@ class UserServiceTest {
     private final User user = TestData.getTestUser();
     private final UserDto userDto = TestData.getTestUserDto();
 
-
-
     @Test
     void getUserByUsername_shouldReturnUserDtoWhenUserExists() {
         when(userRepository.findByUsername("test@gmail.com")).thenReturn(Optional.of(user));
