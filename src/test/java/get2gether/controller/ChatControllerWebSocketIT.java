@@ -10,7 +10,6 @@ import get2gether.repository.MessageRepository;
 import get2gether.repository.UserRepository;
 import get2gether.security.JwtUtil;
 import get2gether.service.CustomUserDetailsService;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,8 +39,6 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-//@ActiveProfiles("test")
-@Slf4j
 @TestPropertySource(locations = "classpath:application-test.properties")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @DirtiesContext
@@ -74,7 +71,6 @@ class ChatControllerWebSocketIT {
 
     @BeforeEach
     void setUp() {
-        // Create unique test user
         testUser = User.builder()
                 .username("test" + UUID.randomUUID() + "@gmail.com")
                 .firstName("TestName")
@@ -86,7 +82,6 @@ class ChatControllerWebSocketIT {
                 .build();
         userRepository.save(testUser);
 
-        // Create unique test group
         testGroup = Group.builder()
                 .name("Test Group " + UUID.randomUUID())
                 .members(Set.of(testUser))
@@ -120,29 +115,24 @@ class ChatControllerWebSocketIT {
             @Override
             public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
                 try {
-                    log.info("WebSocket connected successfully");
                     MessageDto messageDto = MessageDto.builder()
                             .message("Hello Group!")
                             .senderUsername(testUser.getUsername())
                             .build();
-                    log.info("Sending message to group {}: {}", groupId, messageDto);
                     session.send("/app/group/" + groupId + "/chat", messageDto);
                     messageSentFuture.complete(true);
                 } catch (Exception e) {
-                    log.error("Error sending message", e);
                     messageSentFuture.completeExceptionally(e);
                 }
             }
 
             @Override
             public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-                log.error("STOMP error", exception);
                 messageSentFuture.completeExceptionally(exception);
             }
 
             @Override
             public void handleTransportError(StompSession session, Throwable exception) {
-                log.error("Transport error", exception);
                 messageSentFuture.completeExceptionally(exception);
             }
         };
@@ -151,20 +141,12 @@ class ChatControllerWebSocketIT {
 
         assertThat(messageSentFuture.get(5, TimeUnit.SECONDS)).isTrue();
 
-        // Add a small delay to allow message processing
         Thread.sleep(1000);
 
         List<Message> messages = messageRepository.findByGroupId(groupId);
-        log.info("Found {} messages in database for group {}", messages.size(), groupId);
         assertThat(messages).isNotEmpty();
 
         Message savedMessage = messages.get(0);
-        // Log only the non-lazy fields to avoid LazyInitializationException
-        log.info("Saved message - id: {}, message: {}, sender: {}",
-                savedMessage.getId(),
-                savedMessage.getMessage(),
-                savedMessage.getSenderUsername());
-
         assertThat(savedMessage.getMessage()).isEqualTo("Hello Group!");
         assertThat(savedMessage.getSenderUsername()).isEqualTo(testUser.getUsername());
     }
@@ -173,7 +155,6 @@ class ChatControllerWebSocketIT {
     void shouldNotSendGroupMessage_whenUserIsUnauthenticated() throws Exception {
         String url = "http://localhost:" + port + "/ws";
 
-        // No Authorization header → unauthenticated
         StompHeaders connectHeaders = new StompHeaders();
 
         CompletableFuture<Boolean> messageSentFuture = new CompletableFuture<>();
@@ -181,29 +162,24 @@ class ChatControllerWebSocketIT {
             @Override
             public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
                 try {
-                    log.info("WebSocket connected successfully (unauthenticated)");
                     MessageDto messageDto = MessageDto.builder()
                             .message("Hello Group!")
                             .senderUsername(testUser.getUsername())
                             .build();
-                    log.info("Attempting to send message to group {}: {}", groupId, messageDto);
                     session.send("/app/group/" + groupId + "/chat", messageDto);
                     messageSentFuture.complete(true);
                 } catch (Exception e) {
-                    log.error("Error sending message", e);
                     messageSentFuture.completeExceptionally(e);
                 }
             }
 
             @Override
             public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-                log.error("STOMP error", exception);
                 messageSentFuture.completeExceptionally(exception);
             }
 
             @Override
             public void handleTransportError(StompSession session, Throwable exception) {
-                log.error("Transport error", exception);
                 messageSentFuture.completeExceptionally(exception);
             }
         };
@@ -214,8 +190,6 @@ class ChatControllerWebSocketIT {
                 .hasCauseInstanceOf(ConnectionLostException.class);
 
         List<Message> messages = messageRepository.findByGroupId(groupId);
-        log.info("Found {} messages in database for group {} (should be 0)", messages.size(), groupId);
         assertThat(messages).isEmpty();
     }
-
 }
