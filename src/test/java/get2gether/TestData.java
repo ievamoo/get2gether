@@ -1,13 +1,13 @@
 package get2gether;
 
+import get2gether.dto.EventDto;
 import get2gether.dto.MessageDto;
 import get2gether.dto.RegisterRequestDto;
 import get2gether.dto.UserDto;
-import get2gether.model.Group;
-import get2gether.model.Message;
-import get2gether.model.Role;
-import get2gether.model.User;
+import get2gether.model.*;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -59,6 +59,17 @@ public final class TestData {
                 .build();
     }
 
+    public static User getNotHostUser(){
+        return User.builder()
+                .username("other@test.com")
+                .firstName("Other")
+                .lastName("User")
+                .password("encoded_password")
+                .roles(List.of(Role.USER))
+                .goingEvents(new ArrayList<>())
+                .build();
+    }
+
     public static RegisterRequestDto getRegisterRequestDto() {
         return RegisterRequestDto.builder()
                 .username("newUser@mail.com")
@@ -98,4 +109,62 @@ public final class TestData {
                 .members(Set.of())
                 .build();
     }
+
+    public static Group getGroupWithoutId(){
+        return Group.builder()
+                .name("Integration test group")
+                .members(Set.of(getTestUser()))
+                .admin(getTestUser())
+                .build();
+    }
+
+    public static EventDto getEventDto(){
+        return EventDto.builder()
+                .name("Liverpool's parade")
+                .date(LocalDate.now().plusDays(1))
+                .description("Premier League victory parade")
+                .groupName("Integration test group")
+                .hostUsername("test@gmail.com")
+                .build();
+    }
+
+    public static Event getEvent(){
+        return Event.builder()
+                .name("Liverpool's parade")
+                .date(LocalDate.now().plusDays(1))
+                .description("Premier League victory parade")
+                .hostUsername("test@gmail.com")
+                .build();
+    }
+
+    public static Event getSavedEvent(){
+        return Event.builder()
+                .id(1L)
+                .name("Liverpool's parade")
+                .date(LocalDate.now().plusDays(1))
+                .description("Premier League victory parade")
+                .hostUsername("test@gmail.com")
+                .goingMembers(new HashSet<>())
+                .build();
+    }
+
+    public static EventDto getPastEventDto(){
+       return EventDto.builder()
+                .name("Old Event")
+                .date(LocalDate.now().minusDays(1))  // Date in the past
+                .description("This event should not be allowed")
+                .groupName("Integration test group")
+                .build();
+    }
+
+    public static Invite getInvite() {
+        return Invite.builder()
+                .id(1L)
+                .receiver(getNotHostUser())
+                .senderUsername(getTestUser().getUsername())
+                .type(Type.EVENT)
+                .typeId(1L)
+                .build();
+    }
+
 }

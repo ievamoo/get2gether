@@ -56,5 +56,4 @@ public class EventMapper {
         return String.format("%s %s", user.getFirstName(), user.getLastName());
     }
 
-
 }
