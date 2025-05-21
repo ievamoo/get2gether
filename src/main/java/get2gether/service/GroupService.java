@@ -155,7 +155,6 @@ public class GroupService {
                 .orElseThrow(() -> new EntityNotFoundException("Group not found by id: " + id));
     }
 
-
     private void checkIfActionAllowed(String username, Group group) {
         if (!group.getAdmin().getUsername().equals(username)) {
             throw new ForbiddenActionException("You are not allowed to delete this group.");
