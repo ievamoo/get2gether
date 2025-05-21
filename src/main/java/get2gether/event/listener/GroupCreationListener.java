@@ -18,7 +18,7 @@ public class GroupCreationListener {
 
     @EventListener
     public void sendInvitesToSelectedUsers(GroupCreatedEvent event) {
-        if (event.getInvitedUsernames().isEmpty()) {
+        if (event.getInvitedUsernames() == null || event.getInvitedUsernames().isEmpty()) {
             log.info("No users were invited on group {} creation", event.getGroup().getName());
             return;
         }
