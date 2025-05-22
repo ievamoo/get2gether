@@ -4,7 +4,6 @@ import get2gether.event.GroupDeletedEvent;
 import get2gether.model.Type;
 import get2gether.model.User;
 import get2gether.repository.InviteRepository;
-import get2gether.repository.UserRepository;
 import get2gether.service.InviteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +21,18 @@ import java.util.stream.Collectors;
 public class GroupDeletionListener {
 
     private final InviteService inviteService;
-    private final UserRepository userRepository;
     private final InviteRepository inviteRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
+    /**
+     * Handles the group deletion event by cleaning up related invites and notifying users.
+     * This method:
+     * 1. Deletes all pending group invites
+     * 2. Deletes all event invites for events in the deleted group
+     * 3. Notifies all affected users (except the group admin) about the group deletion
+     *
+     * @param event the event containing information about the deleted group
+     */
     @EventListener
     @Transactional
     //pasidebugint
@@ -62,7 +69,5 @@ public class GroupDeletionListener {
                     messagingTemplate.convertAndSendToUser(receiverUsername, "/queue/group-deleted", String.valueOf(event.getDeletedGroup().getId()));
                 });
     }
-
-
 
 }

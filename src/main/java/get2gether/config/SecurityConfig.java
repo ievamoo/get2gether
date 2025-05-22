@@ -33,10 +33,18 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-
     private final JwtRequestFilter jwtRequestFilter;
     private final CustomUserDetailsService customUserDetailsService;
 
+    /**
+     * Configures the security filter chain for the application.
+     * Sets up CORS, CSRF protection, authorization rules, session management,
+     * and authentication provider.
+     *
+     * @param http the HttpSecurity object to configure
+     * @return the configured SecurityFilterChain
+     * @throws Exception if an error occurs during configuration
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -63,6 +71,12 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * Creates and configures the authentication provider.
+     * Sets up the custom user details service and password encoder.
+     *
+     * @return the configured AuthenticationProvider
+     */
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -71,11 +85,24 @@ public class SecurityConfig {
         return authProvider;
     }
 
+    /**
+     * Creates and configures the authentication manager.
+     *
+     * @param config the AuthenticationConfiguration to use
+     * @return the configured AuthenticationManager
+     * @throws Exception if an error occurs during configuration
+     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
+    /**
+     * Configures CORS (Cross-Origin Resource Sharing) settings for the application.
+     * Allows specific origins, methods, and headers for cross-origin requests.
+     *
+     * @return the configured CorsConfigurationSource
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
@@ -89,6 +116,12 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * Creates and configures the password encoder for the application.
+     * Uses BCrypt for secure password hashing.
+     *
+     * @return the configured PasswordEncoder
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

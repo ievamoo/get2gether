@@ -9,6 +9,12 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * Represents a message in the Get2Gather application.
+ * Messages are used for communication within groups.
+ * Each message is associated with a specific group and includes
+ * the sender's username, message content, and timestamp.
+ */
 @Entity
 @Data
 @AllArgsConstructor

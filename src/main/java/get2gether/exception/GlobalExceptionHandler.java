@@ -12,12 +12,17 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Global exception handler.
+ * Catches and processes specific exceptions thrown across the application
+ * and returns standardized error responses with appropriate HTTP status codes.
+ */
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(
             {UsernameNotFoundException.class,
-            ResourceNotFoundException.class}
+                    ResourceNotFoundException.class}
     )
     public ResponseEntity<Map<String, Object>> handleNotFound(Exception ex) {
         return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);

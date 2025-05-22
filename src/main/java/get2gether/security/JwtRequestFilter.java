@@ -25,12 +25,35 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private final CustomUserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
 
+    /**
+     * Determines if the filter should be skipped for the given request.
+     * Skips authentication for login and registration endpoints.
+     *
+     * @param request the HTTP request
+     * @return true if the request should not be filtered, false otherwise
+     */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
         return path.startsWith("/auth/login") || path.startsWith("/auth/register");
     }
 
+    /**
+     * Processes each request to validate the JWT token and set up authentication.
+     * The method:
+     * 1. Extracts the JWT token from the Authorization header
+     * 2. Validates the token and extracts the username
+     * 3. Loads the user details and validates the token against them
+     * 4. Sets up the security context with the authenticated user's details and authorities
+     * 
+     * If the token is expired or invalid, responds with a 401 Unauthorized status.
+     *
+     * @param request the HTTP request
+     * @param response the HTTP response
+     * @param chain the filter chain
+     * @throws ServletException if a servlet error occurs
+     * @throws IOException if an I/O error occurs
+     */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,

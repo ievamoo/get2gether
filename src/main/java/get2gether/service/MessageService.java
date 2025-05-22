@@ -9,6 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+/**
+ * Service responsible for managing group chat messages.
+ * Handles message persistence, validation, and real-time delivery through WebSocket.
+ * Ensures that only group members can send messages and broadcasts messages to all group members.
+ * Integrates with the group service for member validation and uses WebSocket for real-time communication.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

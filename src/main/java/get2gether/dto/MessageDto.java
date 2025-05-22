@@ -7,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * Data transfer object for group messages.
+ * Contains message content and metadata (sender, timestamp).
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

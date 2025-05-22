@@ -1,7 +1,6 @@
 package get2gether.event.listener;
 
 import get2gether.event.EventAttendanceChangedEvent;
-import get2gether.event.EventCreatedEvent;
 import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +14,13 @@ public class EventAttendanceChangedListener {
 
     private final UserRepository userRepository;
 
+    /**
+     * Updates the host's availability when they mark themselves as attending an event.
+     * If the user is going to the event, removes the event date from their available days
+     * to prevent scheduling conflicts.
+     *
+     * @param event the event containing information about the attendance change
+     */
     @EventListener
     public void updateHostAvailability(EventAttendanceChangedEvent event) {
         var user = event.getUser();

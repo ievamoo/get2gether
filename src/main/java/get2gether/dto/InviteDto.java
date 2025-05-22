@@ -9,6 +9,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.Set;
 
+/**
+ * Data transfer object for invitation information.
+ * Contains details about group or event invitations and their status.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
