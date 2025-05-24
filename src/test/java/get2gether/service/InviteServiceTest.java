@@ -1,6 +1,7 @@
 package get2gether.service;
 
 import get2gether.dto.InviteDto;
+import get2gether.enums.Type;
 import get2gether.event.EventPublisher;
 import get2gether.event.InviteStatusChangedEvent;
 import get2gether.exception.ForbiddenActionException;

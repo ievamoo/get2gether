@@ -2,6 +2,7 @@ package get2gether.service;
 
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
+import get2gether.enums.GroupAction;
 import get2gether.enums.Role;
 import get2gether.event.EventPublisher;
 import get2gether.exception.ForbiddenActionException;
@@ -90,12 +91,15 @@ class GroupServiceTest {
                 .goingEvents(new ArrayList<>())
                 .build();
 
-        // Create test group
+        // Create test group with admin user
+        Set<User> members = new HashSet<>();
+        members.add(adminUser);
+        
         testGroup = Group.builder()
                 .id(1L)
                 .name("Test Group")
-                .admin(adminUser)
-                .members(new HashSet<>(Set.of(adminUser)))
+                .admin(adminUser)  // Set admin user
+                .members(members)
                 .events(new ArrayList<Event>())
                 .messages(new ArrayList<Message>())
                 .groupColor("#FF0000")
@@ -165,7 +169,7 @@ class GroupServiceTest {
         when(groupMapper.dtoToModelOnGroupCreate(testGroupDto, adminUser)).thenReturn(testGroup);
         when(groupRepository.save(testGroup)).thenReturn(testGroup);
         when(groupMapper.modelToDtoOnGroupCreate(testGroup)).thenReturn(testGroupDtoResult);
-        doNothing().when(eventPublisher).publishGroupCreatedEvent(any());
+        doNothing().when(eventPublisher).publishGroupAction(GroupAction.CREATED, testGroup, invitedUsernames);
 
         // Act
         GroupDto result = groupService.createGroup(adminUser.getUsername(), testGroupDto);
@@ -178,7 +182,7 @@ class GroupServiceTest {
         verify(groupRepository).existsByName(testGroupDto.getName());
         verify(userService).getUserFromDb(adminUser.getUsername());
         verify(groupRepository).save(any(Group.class));
-        verify(eventPublisher).publishGroupCreatedEvent(any());
+        verify(eventPublisher).publishGroupAction(GroupAction.CREATED, testGroup, invitedUsernames);
     }
 
     @Test
@@ -239,7 +243,7 @@ class GroupServiceTest {
         when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
         when(userService.getUserFromDb(memberUser.getUsername())).thenReturn(memberUser);
         when(groupRepository.save(any(Group.class))).thenReturn(testGroup);
-        doNothing().when(eventPublisher).publishGroupLeaveEvent(any());
+        doNothing().when(eventPublisher).publishGroupAction(GroupAction.LEAVE, testGroup, memberUser);
         when(eventRepository.saveAll(any())).thenReturn(eventsToRemove);
 
         // Act
@@ -249,7 +253,7 @@ class GroupServiceTest {
         verify(groupRepository).findById(1L);
         verify(userService).getUserFromDb(memberUser.getUsername());
         verify(groupRepository).save(any(Group.class));
-        verify(eventPublisher).publishGroupLeaveEvent(any());
+        verify(eventPublisher).publishGroupAction(GroupAction.LEAVE, testGroup, memberUser);
     }
 
     @Test
@@ -271,39 +275,28 @@ class GroupServiceTest {
     void deleteGroup_ShouldSucceed_WhenUserIsAdmin() {
         // Arrange
         when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-        // Remove this stubbing since it's not being used
-        // when(userService.getUserFromDb(adminUser.getUsername())).thenReturn(adminUser);
         doNothing().when(groupRepository).deleteById(1L);
-        doNothing().when(eventPublisher).publishGroupDeletedEvent(any());
+        doNothing().when(eventPublisher).publishGroupAction(GroupAction.DELETED, testGroup);
 
         // Act
         groupService.deleteGroup(1L, adminUser.getUsername());
 
         // Assert
         verify(groupRepository).findById(1L);
-        // Remove this verification since the method doesn't call userService.getUserFromDb
-        // verify(userService).getUserFromDb(adminUser.getUsername());
         verify(groupRepository).deleteById(1L);
-        verify(eventPublisher).publishGroupDeletedEvent(any());
+        verify(eventPublisher).publishGroupAction(GroupAction.DELETED, testGroup);
     }
 
     @Test
     void deleteGroup_ShouldThrowException_WhenUserIsNotAdmin() {
         // Arrange
         when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
-        
-        // Remove this stubbing as it's not needed
-        // when(userService.getUserFromDb(memberUser.getUsername())).thenReturn(memberUser);
 
         // Act & Assert
         assertThrows(ForbiddenActionException.class, 
             () -> groupService.deleteGroup(1L, memberUser.getUsername()));
         
         verify(groupRepository).findById(1L);
-        
-        // Remove this verification as the method doesn't call userService.getUserFromDb
-        // verify(userService).getUserFromDb(memberUser.getUsername());
-        
         verify(groupRepository, never()).deleteById(anyLong());
     }
 
@@ -349,7 +342,6 @@ class GroupServiceTest {
         
         when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
         when(userService.getUserFromDb(memberUser.getUsername())).thenReturn(memberUser);
-        // Removed the unnecessary stubbing
         when(groupRepository.save(any(Group.class))).thenReturn(testGroup);
         when(userMapper.modelToDtoOnGroupCreate(adminUser)).thenReturn(adminUserDto);
 
@@ -357,9 +349,14 @@ class GroupServiceTest {
         Set<UserDto> result = groupService.removeUserFromGroup(1L, memberUser.getUsername(), adminUser.getUsername());
 
         // Assert
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(1);
+        assertThat(result).contains(adminUserDto);
+        
         verify(groupRepository).findById(1L);
         verify(userService).getUserFromDb(memberUser.getUsername());
         verify(groupRepository).save(any(Group.class));
+        verify(userMapper).modelToDtoOnGroupCreate(adminUser);
     }
 
     @Test

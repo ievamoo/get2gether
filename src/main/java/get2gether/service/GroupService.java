@@ -159,7 +159,7 @@ public class GroupService {
     @Transactional
     public Set<UserDto> removeUserFromGroup(Long groupId, String memberToDelete, String username) {
         var group = getGroupByIdFromDb(groupId);
-        checkIfAdmin(memberToDelete, group);
+        checkIfActionAllowed(username, group);
         var userToDelete = userService.getUserFromDb(memberToDelete);
         checkIfUserExistsInGroup(group, userToDelete);
         group.getMembers().remove(userToDelete);
