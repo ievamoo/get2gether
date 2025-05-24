@@ -9,6 +9,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Data transfer object for user information.
+ * Contains user details, availability, and related entities (groups, invites, events).
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

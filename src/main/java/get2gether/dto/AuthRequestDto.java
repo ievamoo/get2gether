@@ -5,6 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data transfer object for authentication requests.
+ * Contains user credentials for login.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

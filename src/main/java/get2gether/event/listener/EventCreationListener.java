@@ -23,7 +23,15 @@ public class EventCreationListener {
     private final InviteRepository inviteRepository;
     private final UserRepository userRepository;
 
-
+    /**
+     * Handles the event creation event by creating and sending invites to group members.
+     * For each group member (except the host), it:
+     * 1. Creates an event invite
+     * 2. Saves the invite to the database
+     * 3. Sends a WebSocket notification to the user
+     *
+     * @param event the event containing information about the created event
+     */
     @EventListener
     public void handleEventCreation(EventCreatedEvent event) {
         log.info("[EventCreationListener] Event creation triggered for event: {}", event.getCreatedEvent().getName());
@@ -43,14 +51,11 @@ public class EventCreationListener {
                     );
                     user.getInvitesReceived().add(invite);
                     invite.setReceiver(user);
-//                    log.info("[EventCreationListener] : dto for username {}", invite.getReceiver());
                     var savedInvite = inviteRepository.save(invite);
                     log.info("[EventCreationListener] Invite saved for user: {}", user.getUsername());
 
                     var inviteDto = inviteMapper.modelToDto(savedInvite);
                     messagingTemplate.convertAndSendToUser(user.getUsername(), "/queue/invites", inviteDto);
-
-//                    inviteNotifierService.sendInviteToUser(inviteDto);
                 });
     }
 
@@ -64,12 +69,4 @@ public class EventCreationListener {
                 .build();
     }
 
-//    @EventListener
-//    public void updateHostAvailability(EventCreatedEvent event) {
-//        var host = userRepository.findByUsername(event.getCreatedEvent().getHostUsername());
-//        if (host.isEmpty()) return;
-//        host.get().getAvailableDays().remove(event.getCreatedEvent().getDate());
-//        userRepository.save(host.get());
-//        log.info("[EventCreationListener] Available days updated. Date removed: {}", event.getCreatedEvent().getDate());
-//    }
 }

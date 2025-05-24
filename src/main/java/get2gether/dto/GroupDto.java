@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Data transfer object for group information.
+ * Contains group details, members, events, messages, and availability information.
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

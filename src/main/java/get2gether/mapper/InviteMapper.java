@@ -11,6 +11,13 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Set;
 
+/**
+ * Mapper class responsible for converting between Invite domain models and InviteDto data transfer objects.
+ * Handles the transformation of invitation data for both group and event invites, including sender information,
+ * receiver details, and associated group/event information. Provides methods for creating new invites and
+ * converting existing invites to DTOs with properly formatted sender names and additional context information
+ * such as group names and event dates.
+ */
 @Service
 @RequiredArgsConstructor
 public class InviteMapper {

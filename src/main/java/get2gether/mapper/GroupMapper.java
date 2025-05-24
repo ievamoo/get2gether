@@ -9,6 +9,13 @@ import org.springframework.stereotype.Service;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Mapper class responsible for converting between Group domain models and GroupDto data transfer objects.
+ * Handles the transformation of group data including admin information, member lists, associated events,
+ * messages, and group settings. Provides specialized mapping methods for different contexts such as
+ * group creation, retrieval, and updates, ensuring proper formatting and data consistency between
+ * domain models and DTOs.
+ */
 @Service
 @RequiredArgsConstructor
 public class GroupMapper {

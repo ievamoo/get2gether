@@ -4,8 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
+/**
+ * Central event publisher for the Get2Gather application.
+ * Handles the publishing of various application events such as invites, events, and groups.
+ * Uses Spring's ApplicationEventPublisher to broadcast events to registered listeners.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -47,11 +51,5 @@ public class EventPublisher {
         log.info("[EventPublisher]: EventAttendanceChangedEvent fired for user {}", event.getUser().getId());
         publisher.publishEvent(event);
     }
-
-
-
-
-
-
 
 }

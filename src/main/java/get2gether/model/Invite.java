@@ -7,6 +7,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+/**
+ * Represents an invitation in the Get2Gather application.
+ * Invites are used to request participation in groups or events.
+ * They track the status of invitations and manage the relationship between
+ * the inviter and invitee.
+ */
 @Entity
 @Table(name = "invite", indexes = {
         @Index(name = "idx_receiver_type_typeId", columnList = "receiver_id, type, typeId"),

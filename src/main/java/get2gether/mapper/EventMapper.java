@@ -11,13 +11,19 @@ import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 
+/**
+ * Mapper class responsible for converting between Event domain models and EventDto data transfer objects.
+ * Handles the transformation of event data including event details, host information, group associations,
+ * and participant lists. Provides specialized mapping methods for different contexts such as event retrieval
+ * and event updates, ensuring proper formatting and data consistency between domain models and DTOs.
+ */
 @Service
 @RequiredArgsConstructor
 public class EventMapper {
 
     private final UserRepository userRepository;
 
-   public EventDto modelToDtoOnGet(Event event) {
+    public EventDto modelToDtoOnGet(Event event) {
         return EventDto.builder()
                 .id(event.getId())
                 .name(event.getName())
@@ -38,11 +44,11 @@ public class EventMapper {
     }
 
     public Event dtoToModel(EventDto dto) {
-       return Event.builder()
-               .name(dto.getName())
-               .date(dto.getDate())
-               .description(dto.getDescription())
-               .build();
+        return Event.builder()
+                .name(dto.getName())
+                .date(dto.getDate())
+                .description(dto.getDescription())
+                .build();
     }
 
     public void updateEvent(EventDto dto, Event event) {

@@ -5,6 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data transfer object for user registration requests.
+ * Contains the necessary information to create a new user account.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

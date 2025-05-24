@@ -4,6 +4,10 @@ import get2gether.model.Event;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Event that is published when an event is deleted.
+ * Contains information about the deleted event.
+ */
 @Getter
 public class EventDeletedEvent extends ApplicationEvent {
 

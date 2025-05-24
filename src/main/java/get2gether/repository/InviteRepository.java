@@ -12,9 +12,9 @@ import java.util.Optional;
 @Repository
 public interface InviteRepository extends JpaRepository<Invite, Long> {
     boolean existsByReceiverAndTypeAndTypeId(User receiver, Type type, Long typeId);
-    List<Invite> findByTypeAndTypeId(Type type, Long typeId);
-    Optional<Invite> findByReceiverAndTypeAndTypeId(User receiver, Type type, Long typeId);
-    void deleteAllByTypeAndTypeId(Type type, Long typeId);
 
+    List<Invite> findByTypeAndTypeId(Type type, Long typeId);
+
+    Optional<Invite> findByReceiverAndTypeAndTypeId(User receiver, Type type, Long typeId);
 
 }

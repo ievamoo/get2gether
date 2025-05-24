@@ -1,7 +1,6 @@
 package get2gether.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;
@@ -10,6 +9,12 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Represents a user in the Get2Gather application.
+ * This entity stores user information including authentication details,
+ * personal information, and relationships with other entities like groups and events.
+ * Users can have different roles and participate in various activities within the platform.
+ */
 @Data
 @Builder
 @NoArgsConstructor
