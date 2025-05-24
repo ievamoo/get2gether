@@ -116,7 +116,7 @@ public class GroupService {
      */
     @Transactional
     public void deleteGroup(Long id, String username) {
-        var group = getGroupByIdFromDb(id);
+        var group = getGroupByIdWithMembers(id);
         checkIfActionAllowed(username, group);
         groupRepository.deleteById(id);
         eventPublisher.publishGroupAction(GroupAction.DELETED, group);

@@ -97,7 +97,9 @@ public class InviteService {
      * @param errorMessages map to collect error messages
      */
     private void processGroupInviteCreation(Group group, User receiver, String senderName, Map<String, String> errorMessages) {
-        checkIfInviteShouldBeSent(group, receiver, errorMessages);
+        if (!shouldSendInvite(group, receiver, errorMessages)) {
+            return;
+        }
         var createdInvite = inviteMapper.dtoToModel(group.getId(), receiver, senderName, group.getName());
         var inviteDto = inviteMapper.modelToDto(inviteRepository.save(createdInvite));
         simpMessagingTemplate.convertAndSendToUser(receiver.getUsername(), "/queue/invites", inviteDto);
@@ -112,14 +114,16 @@ public class InviteService {
      * @param receiver the user to validate
      * @param errorMessages map to collect error messages
      */
-    private void checkIfInviteShouldBeSent(Group group, User receiver, Map<String, String> errorMessages) {
+    private boolean shouldSendInvite(Group group, User receiver, Map<String, String> errorMessages) {
         if (group.getMembers().contains(receiver)) {
             errorMessages.put(receiver.getUsername(), String.format("User already exists in group %s", group.getName()));
-            return;
+            return false;
         }
         if (inviteRepository.existsByReceiverAndTypeAndTypeId(receiver, Type.GROUP, group.getId())) {
             errorMessages.put(receiver.getUsername(), "User is already invited to the group");
+            return false;
         }
+        return true;
     }
 
     /**
@@ -223,4 +227,22 @@ public class InviteService {
     public Optional<Invite> findByReceiverAndTypeAndTypeId(User receiver, Type type, Long typeId) {
         return inviteRepository.findByReceiverAndTypeAndTypeId(receiver, type, typeId);
     }
+
+
+    public InviteDto createEventInvite(Event event, User user) {
+        var invite = Invite.builder()
+                .type(Type.EVENT)
+                .typeId(event.getId())
+                .typeName(event.getName())
+                .senderUsername(event.getHostUsername())
+                .receiver(user)
+                .build();
+
+        user.getInvitesReceived().add(invite);
+        var savedInvite = inviteRepository.save(invite);
+        log.info("[InviteService]: Event invite created for user {}", user.getUsername());
+
+        return inviteMapper.modelToDto(savedInvite);
+    }
+
 }
