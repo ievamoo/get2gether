@@ -35,7 +35,7 @@ public class Group {
     @JoinColumn(name = "admin_id")
     private User admin;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_group",
             joinColumns = @JoinColumn(name = "group_id"),

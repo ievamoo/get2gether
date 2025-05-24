@@ -6,32 +6,30 @@ import get2gether.model.User;
 import get2gether.repository.InviteRepository;
 import get2gether.service.GroupService;
 import get2gether.service.InviteService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class GroupActionManager extends BaseActionManager {
-    private final GroupService groupService;
-    private final InviteRepository inviteRepository;
 
-    public GroupActionManager(SimpMessagingTemplate messagingTemplate, 
-                            InviteService inviteService,
-                            GroupService groupService,
-                            InviteRepository inviteRepository) {
+    public GroupActionManager(SimpMessagingTemplate messagingTemplate,
+                              InviteService inviteService) {
         super(messagingTemplate, inviteService);
-        this.groupService = groupService;
-        this.inviteRepository = inviteRepository;
     }
 
     @EventListener
     @Transactional
     public void handleGroupAction(GroupActionEvent event) {
-        log.info("[GroupActionManager] Handling group action: {} for group: {}", 
-            event.getAction(), event.getGroup().getName());
+        log.info("[GroupActionManager] Handling group action: {} for group: {}",
+                event.getAction(), event.getGroup().getName());
 
         switch (event.getAction()) {
             case CREATED -> handleGroupCreation(event);
@@ -45,12 +43,12 @@ public class GroupActionManager extends BaseActionManager {
             log.info("No users were invited on group {} creation", event.getGroup().getName());
             return;
         }
-        
+
         var invitesToSend = inviteService.createInvitesOnGroupCreation(
-            event.getGroup(), 
-            event.getInvitedUsernames()
+                event.getGroup(),
+                event.getInvitedUsernames()
         );
-        
+
         invitesToSend.forEach(inviteDto -> {
             var receiverUsername = inviteDto.getReceiverUsernames().iterator().next();
             notifyUser(receiverUsername, "/queue/invites", inviteDto);
@@ -59,33 +57,28 @@ public class GroupActionManager extends BaseActionManager {
 
     private void handleGroupDeletion(GroupActionEvent event) {
         var group = event.getGroup();
-        
-        // Clean up group invites
+
         var groupInvites = inviteService.getInvitesByTypeAndTypeId(Type.GROUP, group.getId());
-        inviteRepository.deleteAll(groupInvites);
+        inviteService.deleteInvite(groupInvites);
         log.info("[GroupActionManager]: group invites deleted for group id {}", group.getId());
 
-        // Clean up event invites
         group.getEvents().forEach(event1 -> {
             var eventInvites = inviteService.getInvitesByTypeAndTypeId(Type.EVENT, event1.getId());
             inviteService.deleteInvite(eventInvites);
         });
         log.info("[GroupActionManager]: event invites deleted for group id {}", group.getId());
 
-        // Notify affected users
         var pendingInvitesReceivers = groupInvites.stream()
-            .map(invite -> invite.getReceiver().getUsername())
-            .collect(Collectors.toSet());
-        
+                .map(invite -> invite.getReceiver().getUsername())
+                .collect(Collectors.toSet());
+
         pendingInvitesReceivers.addAll(group.getMembers().stream()
-            .map(User::getUsername)
-            .collect(Collectors.toSet()));
+                .map(User::getUsername)
+                .collect(Collectors.toSet()));
 
         pendingInvitesReceivers.stream()
-            .filter(receiverUsername -> !receiverUsername.equals(group.getAdmin().getUsername()))
-            .forEach(receiverUsername -> 
-                notifyUser(receiverUsername, "/queue/group-deleted", String.valueOf(group.getId()))
-            );
+                .filter(username -> !username.equals(group.getAdmin().getUsername()))
+                .forEach(username -> notifyUser(username, "/queue/group-deleted", String.valueOf(group.getId())));
     }
 
     private void handleGroupLeave(GroupActionEvent event) {
@@ -93,16 +86,12 @@ public class GroupActionManager extends BaseActionManager {
         var user = event.getUser();
         log.info("[GroupActionManager]: handling leave for group {}", group.getName());
 
-        // Clean up event invites
         group.getEvents().forEach(event1 -> {
-            var inviteToDelete = inviteRepository.findByReceiverAndTypeAndTypeId(
-                user, 
-                Type.EVENT, 
-                event1.getId()
-            );
-            inviteToDelete.ifPresent(inviteRepository::delete);
+            var inviteToDelete = inviteService.findByReceiverAndTypeAndTypeId(user, Type.EVENT, event1.getId());
+            inviteToDelete.ifPresent(invite -> inviteService.deleteInvite(List.of(invite)));
         });
 
         notifyGroup(group.getId(), "User left the group.");
     }
-} 
+}
+
