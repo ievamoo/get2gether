@@ -49,7 +49,6 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
             /// this checks if the command being sent is a CONNECT command
             /// a user will not be able to send any frames unless they are connected to a STOMP protocol
             var authHeaderList = accessor.getNativeHeader("Authorization");
-            log.info("authHeader: {}", authHeaderList);
 
             assert authHeaderList != null;
             ///header returns a list of strings
