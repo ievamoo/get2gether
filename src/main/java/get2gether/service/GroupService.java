@@ -135,7 +135,7 @@ public class GroupService {
     public void addMember(Long groupId, User receiver) {
         var group = getGroupByIdFromDb(groupId);
         if (group.getMembers().contains(receiver)) {
-            throw new ResourceAlreadyExistsException(ResourceType.USER, "username: " + receiver.getUsername());
+            throw new ResourceAlreadyExistsException(ResourceType.USER,  "username: " + receiver.getUsername());
         }
         receiver.getGroups().add(group);
         group.getMembers().add(receiver);
@@ -186,7 +186,7 @@ public class GroupService {
     @Transactional
     public void leaveGroup(Long groupId, String username) {
         Group groupToLeave = groupRepository.findById(groupId)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + groupId));
+                .orElseThrow(() -> new ResourceNotFoundException(ResourceType.GROUP, "id: " + groupId));
 
         User currentUser = userService.getUserFromDb(username);
 
@@ -235,7 +235,7 @@ public class GroupService {
      */
     public void checkIfUserExistsInGroup(Group group, User userToDelete) {
         if (!group.getMembers().contains(userToDelete)) {
-            throw new ResourceNotFoundException(ResourceType.USER, "username: " + userToDelete.getUsername());
+            throw new ResourceNotFoundException(ResourceType.USER,"username: " + userToDelete.getUsername());
         }
     }
 
@@ -248,7 +248,7 @@ public class GroupService {
      */
     public Group getGroupByIdFromDb(Long id) {
         return groupRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Group not found by id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(ResourceType.GROUP, "id: " + id));
     }
 
     /**
@@ -322,4 +322,5 @@ public class GroupService {
         return groupRepository.findByIdWithMembers(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ResourceType.GROUP, "id: " + id));
     }
+
 }
