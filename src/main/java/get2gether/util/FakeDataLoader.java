@@ -1,6 +1,6 @@
 package get2gether.util;
 
-import get2gether.model.Role;
+import get2gether.enums.Role;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
 import jakarta.annotation.PostConstruct;

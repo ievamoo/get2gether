@@ -3,13 +3,14 @@ package get2gether.service;
 import get2gether.TestData;
 import get2gether.dto.EventDto;
 import get2gether.dto.EventStatusDto;
+import get2gether.enums.EventAction;
 import get2gether.event.EventPublisher;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.mapper.EventMapper;
 import get2gether.model.Event;
 import get2gether.model.Group;
-import get2gether.model.Type;
+import get2gether.enums.Type;
 import get2gether.model.User;
 import get2gether.repository.EventRepository;
 import org.junit.jupiter.api.Test;
@@ -162,13 +163,13 @@ class EventServiceTest {
         when(eventRepository.findById(1L)).thenReturn(Optional.of(savedEvent));
         when(eventRepository.save(any(Event.class))).thenReturn(savedEvent);
         when(inviteService.findByReceiverAndTypeAndTypeId(any(), any(), any())).thenReturn(Optional.empty());
-        doNothing().when(eventPublisher).publishEventAttendanceChangedEvent(any());
+        doNothing().when(eventPublisher).publishEventAttendanceChanged(any(), any(), any(), any());
 
         var statusDto = new EventStatusDto(true);
         testEventService.toggleEventAttendance("test@gmail.com", 1L, statusDto);
 
         verify(eventRepository).save(any(Event.class));
-        verify(eventPublisher).publishEventAttendanceChangedEvent(any());
+        verify(eventPublisher).publishEventAttendanceChanged(any(), any(), any(), any());
     }
 
     @Test
@@ -197,5 +198,33 @@ class EventServiceTest {
         testEventService.toggleEventAttendance("test@gmail.com", 1L, statusDto);
 
         verify(inviteService).deleteInvite(any());
+    }
+
+    @Test
+    void createEvent_shouldPublishEvents() {
+        when(groupService.findByName(eventDto.getGroupName())).thenReturn(group);
+        when(eventMapper.dtoToModel(eventDto)).thenReturn(event);
+        when(userService.getUserFromDb("test@gmail.com")).thenReturn(host);
+        when(eventRepository.save(event)).thenReturn(savedEvent);
+        when(eventMapper.modelToDtoOnGet(savedEvent)).thenReturn(eventDto);
+        doNothing().when(eventPublisher).publishEventAction(any(), any());
+        doNothing().when(eventPublisher).publishEventAttendanceChanged(any(), any(), any(), any());
+
+        testEventService.createEvent(eventDto, "test@gmail.com");
+
+        verify(eventPublisher).publishEventAction(EventAction.CREATED, any());
+        verify(eventPublisher).publishEventAttendanceChanged(any(), any(), any(), any());
+    }
+
+    @Test
+    void deleteEvent_shouldPublishEvent() {
+        when(eventRepository.findById(1L)).thenReturn(Optional.of(savedEvent));
+        doNothing().when(eventRepository).deleteById(1L);
+        doNothing().when(eventPublisher).publishEventAction(any(), any());
+
+        testEventService.deleteEvent(1L, "test@gmail.com");
+
+        verify(eventRepository).deleteById(1L);
+        verify(eventPublisher).publishEventAction(EventAction.DELETED, any());
     }
 }

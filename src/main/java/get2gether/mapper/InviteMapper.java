@@ -1,6 +1,8 @@
 package get2gether.mapper;
 
 import get2gether.dto.InviteDto;
+import get2gether.enums.ResourceType;
+import get2gether.enums.Type;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.model.*;
 import get2gether.repository.EventRepository;

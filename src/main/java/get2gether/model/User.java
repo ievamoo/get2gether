@@ -1,6 +1,7 @@
 package get2gether.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import get2gether.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicUpdate;

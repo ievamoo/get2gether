@@ -2,6 +2,7 @@ package get2gether.service;
 
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
+import get2gether.enums.Role;
 import get2gether.event.EventPublisher;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceAlreadyExistsException;
@@ -12,7 +13,6 @@ import get2gether.mapper.UserMapper;
 import get2gether.model.*;
 import get2gether.repository.EventRepository;
 import get2gether.repository.GroupRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -218,7 +218,7 @@ class GroupServiceTest {
         when(groupMapper.modelToDtoOnUpdate(testGroup)).thenReturn(updatedGroupResult);
 
         // Act
-        GroupDto result = groupService.updateGroup(updateDto, 1L);
+        GroupDto result = groupService.updateGroup(updateDto, 1L, testGroup.getAdmin().getUsername());
 
         // Assert
         assertThat(result.getName()).isEqualTo("Updated Group Name");

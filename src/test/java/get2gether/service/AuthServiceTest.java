@@ -1,6 +1,7 @@
 package get2gether.service;
 
 import get2gether.TestData;
+import get2gether.enums.Role;
 import get2gether.exception.RegistrationException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.repository.UserRepository;
@@ -14,7 +15,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -103,7 +103,7 @@ class AuthServiceTest {
                 .password("encoded_password")
                 .firstName(registerRequest.getFirstName())
                 .lastName(registerRequest.getLastName())
-                .roles(List.of(get2gether.model.Role.USER))
+                .roles(List.of(Role.USER))
                 .build();
 
         when(userRepository.save(any(get2gether.model.User.class))).thenReturn(savedUser);

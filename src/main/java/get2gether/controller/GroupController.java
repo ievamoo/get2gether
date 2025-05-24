@@ -56,7 +56,7 @@ public class GroupController {
      * Creates a new group with the authenticated user as the creator.
      *
      * @param authentication the authentication object containing the current user's details
-     * @param groupDto the group details to create
+     * @param groupDto       the group details to create
      * @return ResponseEntity with status CREATED containing the created group details
      */
     @PostMapping
@@ -71,13 +71,17 @@ public class GroupController {
      * Updates the name of an existing group.
      *
      * @param editedGroup the updated group details
-     * @param groupId the unique identifier of the group to update
+     * @param groupId     the unique identifier of the group to update
      * @return ResponseEntity with status ACCEPTED containing the updated group details
      */
     @PutMapping("/{groupId}")
-    public ResponseEntity<GroupDto> editGroupName(@RequestBody final GroupDto editedGroup,
-                                                  @PathVariable final Long groupId) {
-        var updatedGroup = groupService.updateGroup(editedGroup, groupId);
+    public ResponseEntity<GroupDto> editGroup(
+            @RequestBody final GroupDto editedGroup,
+            @PathVariable final Long groupId,
+            Authentication authentication
+    ) {
+        var username = authentication.getName();
+        var updatedGroup = groupService.updateGroup(editedGroup, groupId, username);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(updatedGroup);
     }
 
@@ -85,7 +89,7 @@ public class GroupController {
      * Deletes a group if the authenticated user has permission.
      *
      * @param authentication the authentication object containing the current user's details
-     * @param groupId the unique identifier of the group to delete
+     * @param groupId        the unique identifier of the group to delete
      * @return ResponseEntity with no content if deletion is successful
      */
     @DeleteMapping("/{groupId}")
@@ -99,7 +103,7 @@ public class GroupController {
     /**
      * Removes a specific member from the group if the authenticated user has permission.
      *
-     * @param groupId the unique identifier of the group
+     * @param groupId        the unique identifier of the group
      * @param memberToDelete the username of the member to remove
      * @param authentication the authentication object containing the current user's details
      * @return ResponseEntity with status ACCEPTED containing the updated list of group members
@@ -116,7 +120,7 @@ public class GroupController {
     /**
      * Allows the authenticated user to leave a group.
      *
-     * @param groupId the unique identifier of the group to leave
+     * @param groupId        the unique identifier of the group to leave
      * @param authentication the authentication object containing the current user's details
      * @return ResponseEntity with no content if leaving the group is successful
      */

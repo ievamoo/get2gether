@@ -7,7 +7,7 @@ import get2gether.exception.ResourceNotFoundException;
 import get2gether.mapper.MessageMapper;
 import get2gether.model.Group;
 import get2gether.model.Message;
-import get2gether.model.ResourceType;
+import get2gether.enums.ResourceType;
 import get2gether.model.User;
 import get2gether.repository.MessageRepository;
 import org.junit.jupiter.api.Test;

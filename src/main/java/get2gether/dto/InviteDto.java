@@ -1,6 +1,6 @@
 package get2gether.dto;
 
-import get2gether.model.Type;
+import get2gether.enums.Type;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

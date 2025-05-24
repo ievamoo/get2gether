@@ -3,11 +3,12 @@ package get2gether.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import get2gether.dto.GroupDto;
 import get2gether.model.Group;
-import get2gether.model.Role;
+import get2gether.enums.Role;
 import get2gether.model.User;
 import get2gether.repository.GroupRepository;
 import get2gether.repository.UserRepository;
 import get2gether.security.JwtUtil;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -28,11 +29,10 @@ import java.util.Set;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import jakarta.persistence.EntityManager;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource(locations = "classpath:application-test.properties")
+@ActiveProfiles("test")
 @Transactional
 class GroupControllerTest {
 
@@ -128,7 +128,7 @@ class GroupControllerTest {
     }
 
     @Test
-    void editGroupName() throws Exception {
+    void editGroup() throws Exception {
         var editedGroupDto = GroupDto.builder()
                 .name("Updated Group Name")
                 .build();
