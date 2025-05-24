@@ -157,7 +157,12 @@ public class JwtUtil {
      */
     public boolean isTokenValid(String token) {
         try {
-            return !isTokenExpired(token);
+            // This will validate signature, expiration, and structure
+            Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
         } catch (Exception e) {
             return false;
         }
