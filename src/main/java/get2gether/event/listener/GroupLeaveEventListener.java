@@ -21,6 +21,15 @@ public class GroupLeaveEventListener {
     private final InviteRepository inviteRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
+    /**
+     * Handles the group leave event by cleaning up event invites and notifying group members.
+     * This method:
+     * 1. Gets all event IDs from the group
+     * 2. Deletes any pending event invites for the leaving user
+     * 3. Notifies all group members about the user leaving
+     *
+     * @param event the event containing information about the user leaving the group
+     */
     @EventListener
     public void handleGroupLeaveEvent(GroupLeaveEvent event) {
         var group = event.getLeftGroup();
@@ -39,7 +48,6 @@ public class GroupLeaveEventListener {
         });
 
         messagingTemplate.convertAndSend("/topic/group/" + group.getId(), "User left the group.");
-
     }
 
 }

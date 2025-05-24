@@ -5,6 +5,10 @@ import get2gether.model.User;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Event that is published when a user leaves a group.
+ * Contains information about the group that was left and the user who left it.
+ */
 @Getter
 public class GroupLeaveEvent extends ApplicationEvent {
 

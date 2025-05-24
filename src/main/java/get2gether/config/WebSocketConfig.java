@@ -16,14 +16,30 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final WebSocketAuthInterceptor webSocketAuthInterceptor;
 
+    /**
+     * Registers STOMP endpoints for WebSocket communication.
+     * Configures the WebSocket endpoint with SockJS fallback support
+     * and sets allowed origin patterns.
+     *
+     * @param registry the StompEndpointRegistry to configure
+     */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();
-
     }
 
+    /**
+     * Configures the message broker for WebSocket communication.
+     * Sets up destination prefixes for different types of messaging:
+     * - /queue for point-to-point messaging
+     * - /topic for publish-subscribe messaging
+     * - /app for application-specific destinations
+     * - /user for user-specific destinations
+     *
+     * @param config the MessageBrokerRegistry to configure
+     */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/queue", "/topic");
@@ -31,6 +47,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         config.setUserDestinationPrefix("/user");
     }
 
+    /**
+     * Configures the client inbound channel with authentication interceptor.
+     * Adds security to WebSocket connections by intercepting and validating
+     * incoming messages.
+     *
+     * @param registration the ChannelRegistration to configure
+     */
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(webSocketAuthInterceptor);

@@ -1,12 +1,13 @@
 package get2gether.event;
 
 import get2gether.model.Event;
-import get2gether.model.User;
 import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
-import java.util.List;
-
+/**
+ * Event that is published when a new event is created.
+ * Contains information about the newly created event.
+ */
 @Getter
 public class EventCreatedEvent extends ApplicationEvent {
 

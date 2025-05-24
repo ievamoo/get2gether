@@ -8,6 +8,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.util.Set;
 
+/**
+ * Data transfer object for user availability information.
+ * Contains a set of dates when a user is available.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

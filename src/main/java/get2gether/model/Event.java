@@ -1,6 +1,5 @@
 package get2gether.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,9 +7,12 @@ import lombok.experimental.Accessors;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Set;
 
+/**
+ * Represents an event in the Get2Gather application.
+ * They include details such as location, time, and participant information.
+ */
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor

@@ -11,6 +11,12 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+/**
+ * Mapper class responsible for converting between Message domain models and MessageDto data transfer objects.
+ * Handles the transformation of message data including sender information, message content, timestamps,
+ * and group associations. Provides methods for creating new messages from DTOs and converting existing
+ * messages to DTOs with properly formatted sender names.
+ */
 @Service
 @RequiredArgsConstructor
 public class MessageMapper {

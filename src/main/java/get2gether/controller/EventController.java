@@ -10,6 +10,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller responsible for managing event-related operations.
+ * Provides REST endpoints for event lifecycle management, including:
+ * - Event creation and configuration
+ * - Event updates and modifications
+ * - Event deletion and cleanup
+ * - Attendance management and tracking
+ * Handles authentication and authorization for event operations.
+ */
 @RestController
 @RequestMapping("/events")
 @RequiredArgsConstructor

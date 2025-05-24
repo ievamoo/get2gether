@@ -16,17 +16,23 @@ public class GroupCreationListener {
     private final InviteService inviteService;
     private final SimpMessagingTemplate messagingTemplate;
 
+    /**
+     * Handles the group creation event by sending invites to selected users.
+     * Creates and sends group invites to all users specified in the event,
+     * and notifies them through WebSocket messages.
+     *
+     * @param event the event containing information about the created group and invited users
+     */
     @EventListener
     public void sendInvitesToSelectedUsers(GroupCreatedEvent event) {
         if (event.getInvitedUsernames() == null || event.getInvitedUsernames().isEmpty()) {
             log.info("No users were invited on group {} creation", event.getGroup().getName());
             return;
         }
-
         var invitesToSend = inviteService.createInvitesOnGroupCreation(event.getGroup(), event.getInvitedUsernames());
-        invitesToSend.forEach(inviteDto ->{
+        invitesToSend.forEach(inviteDto -> {
             var receiverUsername = inviteDto.getReceiverUsernames().iterator().next();
             messagingTemplate.convertAndSendToUser(receiverUsername, "/queue/invites", inviteDto);
-        } );
+        });
     }
 }

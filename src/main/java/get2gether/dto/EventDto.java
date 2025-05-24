@@ -1,6 +1,5 @@
 package get2gether.dto;
 
-import jakarta.persistence.Access;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +10,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Data transfer object for event information.
+ * Contains event details, host information, and related entities (participants).
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,6 +27,5 @@ public class EventDto {
     private LocalDate date;
     private String description;
     private String groupName;
-    private List<MessageDto> messages;
     private Set<UserDto> goingMembers;
 }

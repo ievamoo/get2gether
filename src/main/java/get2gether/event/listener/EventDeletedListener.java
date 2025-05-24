@@ -16,6 +16,14 @@ public class EventDeletedListener {
 
     private final InviteService inviteService;
 
+    /**
+     * Handles the event deletion by removing all related invites.
+     * This method:
+     * 1. Retrieves all invites associated with the deleted event
+     * 2. Deletes all found invites
+     *
+     * @param event the event containing information about the deleted event
+     */
     @EventListener
     @Transactional
     public void handleEventDeletedEvent(EventDeletedEvent event) {

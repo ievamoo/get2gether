@@ -8,7 +8,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 
-
+/**
+ * Mapper class responsible for converting between User domain models and UserDto data transfer objects.
+ * Handles the transformation of user data for different contexts such as group creation, user retrieval,
+ * and user updates. Ensures proper formatting of user information and maintains data consistency
+ * between the domain model and DTO representations.
+ */
 @Service
 @RequiredArgsConstructor
 public class UserMapper {

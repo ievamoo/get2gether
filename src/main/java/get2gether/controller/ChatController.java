@@ -11,6 +11,14 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
+/**
+ * Controller responsible for handling real-time group chat functionality through WebSocket.
+ * Manages WebSocket message handling for group chats, including:
+ * - Real-time message delivery to group members
+ * - Message persistence and validation
+ * - Authentication and authorization of chat participants
+ * - WebSocket connection management
+ */
 @Controller
 @RequiredArgsConstructor
 @Slf4j

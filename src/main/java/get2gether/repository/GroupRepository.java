@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface GroupRepository extends JpaRepository<Group, Long> {
     Boolean existsByName(String groupName);
+
     Optional<Group> findByName(String groupName);
 
     @Query("SELECT g FROM Group g LEFT JOIN FETCH g.members WHERE g.id = :id")

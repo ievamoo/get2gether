@@ -19,17 +19,28 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Configuration
 @RequiredArgsConstructor
 @Slf4j
-@Order(Ordered.HIGHEST_PRECEDENCE + 99)/// ensure its used before spring securities interceptor
+@Order(Ordered.HIGHEST_PRECEDENCE + 99)
+/// ensure it's used before spring securities interceptor
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
 
 
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
-    /// this interceptor is used to intercept all STOMP connect frames
-    /// we validate the users token sent in the headers of the connect frame and sets the principal in the ws context,
-    /// this way we associate the websocket session with this specific user.
-    /// other frames like SEND,SUBSCRIBE use this same principal as the authenticated user
 
+    /**
+     * Intercepts WebSocket messages before they are sent to validate authentication for STOMP connect frames.
+     * For CONNECT commands, it:
+     * 1. Extracts the JWT token from the Authorization header
+     * 2. Validates the token and extracts the username
+     * 3. Loads the user details
+     * 4. Sets the authenticated user as the principal in the WebSocket context
+     * 
+     * Other STOMP frames (SEND, SUBSCRIBE) use the principal set during connection.
+     *
+     * @param message the message being sent
+     * @param channel the channel the message is being sent through
+     * @return the original message, potentially modified with authentication information
+     */
     @Override
     public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
@@ -37,13 +48,13 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             /// this checks if the command being sent is a CONNECT command
             /// a user will not be able to send any frames unless they are connected to a STOMP protocol
-            var authHeaderList =  accessor.getNativeHeader("Authorization");
+            var authHeaderList = accessor.getNativeHeader("Authorization");
             log.info("authHeader: {}", authHeaderList);
 
             assert authHeaderList != null;
             ///header returns a list of strings
             String authHeader = authHeaderList.get(0);
-            if(authHeader!=null && authHeader.startsWith("Bearer ")) {
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
 
                 String jwt = authHeader.substring(7);
                 String username = jwtUtil.extractUsername(jwt);
@@ -54,12 +65,11 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                         userDetails.getAuthorities());
                 accessor.setUser(authenticatedUser); ///setting the context of the user as the principal
 
-            }else{
+            } else {
                 log.info("Authorization header not present");
             }
 
         }
-
         /// if any other frames are being sent they don't need authentication as it is already set
         return message;
     }

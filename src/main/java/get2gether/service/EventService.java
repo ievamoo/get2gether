@@ -17,6 +17,17 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Service responsible for managing events within groups.
+ * Handles event lifecycle operations including creation, updates, deletion, and attendance management.
+ * Provides functionality for:
+ * - Event creation with date validation and host assignment
+ * - Event updates with host permission checks
+ * - Event deletion with proper cleanup
+ * - Attendance management (adding/removing members)
+ * - Real-time notifications through event publishing
+ * Integrates with group service for group validation and invite service for attendance management.
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j

@@ -10,6 +10,10 @@ import org.hibernate.annotations.DynamicUpdate;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Represents a group in the Get2Gather application.
+ * Groups are collections of users who can interact, share events, and communicate.
+ */
 @Entity
 @Data
 @AllArgsConstructor
