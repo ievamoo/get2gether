@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import get2gether.TestData;
 import get2gether.dto.EventDto;
 import get2gether.model.User;
+import get2gether.model.Group;
 import get2gether.repository.EventRepository;
 import get2gether.repository.GroupRepository;
 import get2gether.repository.UserRepository;
@@ -149,7 +150,15 @@ class EventControllerIT {
     @Test
     void deleteEvent_shouldReturnNoContent_whenHostDeletesOwnEvent() throws Exception {
         var event = TestData.getEvent();
-        eventRepository.save(event);
+        event.setHostUsername(testUser.getUsername());
+        var testGroup = Group.builder()
+                .name("Test Group " + System.currentTimeMillis())  // Make name unique
+                .members(Set.of(testUser))
+                .admin(testUser)
+                .build();
+        testGroup = groupRepository.save(testGroup);
+        event.setGroup(testGroup);
+        event = eventRepository.save(event);
         mockMvc.perform(MockMvcRequestBuilders.delete("/events/{eventId}", event.getId())
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isNoContent());

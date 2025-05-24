@@ -19,13 +19,15 @@ public class FakeDataLoader {
 
     @PostConstruct
     public void createAdmin() {
-        var admin = User.builder()
-                .username("admin@gmail.com")
-                .firstName("Admin")
-                .lastName("Admin")
-                .password(passwordEncoder.encode("admin123"))
-                .roles(List.of(Role.ADMIN))
-                .build();
-        userRepository.save(admin);
+        if (userRepository.findByUsername("admin@gmail.com").isEmpty()) {
+            var admin = User.builder()
+                    .username("admin@gmail.com")
+                    .firstName("Admin")
+                    .lastName("Admin")
+                    .password(passwordEncoder.encode("admin123"))
+                    .roles(List.of(Role.ADMIN))
+                    .build();
+            userRepository.save(admin);
+        }
     }
 }

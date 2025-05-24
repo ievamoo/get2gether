@@ -4,24 +4,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import get2gether.dto.InviteDto;
+import get2gether.enums.Role;
+import get2gether.enums.Type;
 import get2gether.model.*;
 import get2gether.repository.GroupRepository;
 import get2gether.repository.InviteRepository;
 import get2gether.repository.UserRepository;
-import get2gether.service.InviteService;
+import get2gether.security.JwtUtil;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -37,18 +38,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource(locations = "classpath:application-test.properties")
+@ActiveProfiles("test")
 @Transactional
 class InviteControllerTest {
 
     @Autowired
-    private WebApplicationContext context;
-
-    @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private InviteService inviteService;
 
     @Autowired
     private UserRepository userRepository;
@@ -60,157 +55,237 @@ class InviteControllerTest {
     private InviteRepository inviteRepository;
 
     @Autowired
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
-    private User testUser;
-    private User user1;
-    private User user2;
+    @Autowired
+    private EntityManager entityManager;
+
+    private User adminUser;
+    private User invitedUser;
     private Group testGroup;
+    private String adminToken;
+    private String invitedUserToken;
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders
-                .webAppContextSetup(context)
-                .apply(SecurityMockMvcConfigurers.springSecurity())
-                .build();
-
         // Configure ObjectMapper
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        // Create test users
-        testUser = User.builder()
-                .username("testuser@test.com")
-                .firstName("Test")
+        // Create admin user
+        adminUser = User.builder()
+                .username("admin@test.com")
+                .firstName("Admin")
                 .lastName("User")
-                .password("password")
+                .password(passwordEncoder.encode("password"))
                 .roles(new ArrayList<>(List.of(Role.USER)))
                 .invitesReceived(new ArrayList<>())
                 .groups(new HashSet<>())
                 .goingEvents(new ArrayList<>())
                 .availableDays(new HashSet<>())
                 .build();
-        userRepository.save(testUser);
+        adminUser = userRepository.save(adminUser);
 
-        user1 = User.builder()
-                .username("user1@test.com")
-                .firstName("User")
-                .lastName("One")
-                .password("password")
+        // Create invited user
+        invitedUser = User.builder()
+                .username("invited@test.com")
+                .firstName("Invited")
+                .lastName("User")
+                .password(passwordEncoder.encode("password"))
                 .roles(new ArrayList<>(List.of(Role.USER)))
                 .invitesReceived(new ArrayList<>())
                 .groups(new HashSet<>())
                 .goingEvents(new ArrayList<>())
                 .availableDays(new HashSet<>())
                 .build();
-        userRepository.save(user1);
+        invitedUser = userRepository.save(invitedUser);
 
-        user2 = User.builder()
-                .username("user2@test.com")
-                .firstName("User")
-                .lastName("Two")
-                .password("password")
-                .roles(new ArrayList<>(List.of(Role.USER)))
-                .invitesReceived(new ArrayList<>())
-                .groups(new HashSet<>())
-                .goingEvents(new ArrayList<>())
-                .availableDays(new HashSet<>())
-                .build();
-        userRepository.save(user2);
-
-        // Create test group with mutable collections
+        // Create test group
         Set<User> members = new HashSet<>();
-        members.add(testUser);
+        members.add(adminUser);
 
         testGroup = Group.builder()
                 .name("Test Group")
-                .admin(testUser)
+                .admin(adminUser)
                 .members(members)
                 .events(new ArrayList<>())
                 .messages(new ArrayList<>())
                 .build();
-        groupRepository.save(testGroup);
-        testUser.getGroups().add(testGroup);
-        userRepository.save(testUser);
+        testGroup = groupRepository.save(testGroup);
+
+        // Ensure bidirectional relationship
+        adminUser.getGroups().add(testGroup);
+        userRepository.save(adminUser);
+
+        // Generate JWT tokens
+        UserDetails adminDetails = org.springframework.security.core.userdetails.User
+                .withUsername(adminUser.getUsername())
+                .password("irrelevant_in_token")
+                .authorities("USER")
+                .build();
+        adminToken = jwtUtil.generateToken(adminDetails);
+
+        UserDetails invitedUserDetails = org.springframework.security.core.userdetails.User
+                .withUsername(invitedUser.getUsername())
+                .password("irrelevant_in_token")
+                .authorities("USER")
+                .build();
+        invitedUserToken = jwtUtil.generateToken(invitedUserDetails);
     }
 
     @Test
-    @WithMockUser(username = "testuser@test.com")
-    void createGroupInvite_shouldReturnCreated() throws Exception {
-        InviteDto dto = InviteDto.builder()
+    void createAndAcceptGroupInvite_shouldSucceed() throws Exception {
+        // Create invite
+        InviteDto inviteDto = InviteDto.builder()
                 .type(Type.GROUP)
                 .typeId(testGroup.getId())
                 .typeName(testGroup.getName())
                 .groupName(testGroup.getName())
                 .eventDate(LocalDate.now())
-                .senderUsername(testUser.getUsername())
-                .receiverUsernames(new HashSet<>(Set.of(user1.getUsername(), user2.getUsername())))
+                .senderUsername(adminUser.getUsername())
+                .receiverUsernames(new HashSet<>(Set.of(invitedUser.getUsername())))
                 .build();
 
         mockMvc.perform(post("/invites")
+                        .header("Authorization", "Bearer " + adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
+                        .content(objectMapper.writeValueAsString(inviteDto)))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.TEXT_PLAIN));
 
-        // Verify invites were created
-        assertTrue(inviteRepository.existsByReceiverAndTypeAndTypeId(user1, Type.GROUP, testGroup.getId()));
-        assertTrue(inviteRepository.existsByReceiverAndTypeAndTypeId(user2, Type.GROUP, testGroup.getId()));
-    }
+        // Force refresh from database
+        entityManager.flush();
+        entityManager.clear();
 
-    @Test
-    @WithMockUser(username = "user1@test.com")
-    void respondToInvite_shouldReturnOk() throws Exception {
-        // Create an invite first
-        Invite invite = Invite.builder()
-                .type(Type.GROUP)
-                .typeId(testGroup.getId())
-                .typeName(testGroup.getName())
-                .senderUsername(testUser.getUsername())
-                .receiver(user1)
-                .build();
-        user1.getInvitesReceived().add(invite);
-        inviteRepository.save(invite);
+        // Refresh user from database
+        invitedUser = userRepository.findByUsername(invitedUser.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // Verify invite was created and get its ID
+        Invite createdInvite = inviteRepository.findByReceiverAndTypeAndTypeId(invitedUser, Type.GROUP, testGroup.getId())
+                .orElseThrow(() -> new RuntimeException("Invite not found after creation"));
+        assertNotNull(createdInvite.getId(), "Invite ID should not be null");
+
+        // Verify invite is in user's received invites
+        assertTrue(invitedUser.getInvitesReceived().contains(createdInvite), "Invite should be in user's received invites");
+
+        // Accept invite
         InviteDto responseDto = InviteDto.builder()
                 .accepted(true)
                 .build();
 
-        mockMvc.perform(patch("/invites/" + invite.getId())
+        mockMvc.perform(patch("/invites/" + createdInvite.getId())
+                        .header("Authorization", "Bearer " + invitedUserToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(responseDto)))
                 .andExpect(status().isOk());
 
-        // Verify invite was processed
-        assertFalse(inviteRepository.existsById(invite.getId()));
-        assertTrue(groupRepository.findById(testGroup.getId()).get().getMembers().contains(user1));
+        // Force refresh from database
+        entityManager.flush();
+        entityManager.clear();
+
+        // Refresh user from database
+        invitedUser = userRepository.findByUsername(invitedUser.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Verify invite was removed from user's received invites
+        assertFalse(invitedUser.getInvitesReceived().contains(createdInvite), "Invite should be removed from user's received invites");
+        
+        // Verify invite was deleted from repository
+        assertFalse(inviteRepository.existsById(createdInvite.getId()), "Invite should be deleted from repository");
+
+        // Verify user was added to group
+        assertTrue(groupRepository.findById(testGroup.getId()).get().getMembers().contains(invitedUser), "User should be added to group");
     }
 
     @Test
-    @WithMockUser(username = "user1@test.com")
-    void respondToInvite_withDecline_shouldReturnOk() throws Exception {
-        // Create an invite first
-        Invite invite = Invite.builder()
+    void createAndDeclineGroupInvite_shouldSucceed() throws Exception {
+        // Create invite
+        InviteDto inviteDto = InviteDto.builder()
                 .type(Type.GROUP)
                 .typeId(testGroup.getId())
                 .typeName(testGroup.getName())
-                .senderUsername(testUser.getUsername())
-                .receiver(user1)
+                .groupName(testGroup.getName())
+                .eventDate(LocalDate.now())
+                .senderUsername(adminUser.getUsername())
+                .receiverUsernames(new HashSet<>(Set.of(invitedUser.getUsername())))
                 .build();
-        user1.getInvitesReceived().add(invite);
-        inviteRepository.save(invite);
 
+        mockMvc.perform(post("/invites")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(inviteDto)))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.TEXT_PLAIN));
+
+        // Force refresh from database
+        entityManager.flush();
+        entityManager.clear();
+
+        // Refresh user from database
+        invitedUser = userRepository.findByUsername(invitedUser.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Verify invite was created and get its ID
+        Invite createdInvite = inviteRepository.findByReceiverAndTypeAndTypeId(invitedUser, Type.GROUP, testGroup.getId())
+                .orElseThrow(() -> new RuntimeException("Invite not found after creation"));
+        assertNotNull(createdInvite.getId(), "Invite ID should not be null");
+
+        // Verify invite is in user's received invites
+        assertTrue(invitedUser.getInvitesReceived().contains(createdInvite), "Invite should be in user's received invites");
+
+        // Decline invite
         InviteDto responseDto = InviteDto.builder()
                 .accepted(false)
                 .build();
 
-        mockMvc.perform(patch("/invites/" + invite.getId())
+        mockMvc.perform(patch("/invites/" + createdInvite.getId())
+                        .header("Authorization", "Bearer " + invitedUserToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(responseDto)))
                 .andExpect(status().isOk());
 
-        // Verify invite was processed but user not added to group
-        assertFalse(inviteRepository.existsById(invite.getId()));
-        assertFalse(groupRepository.findById(testGroup.getId()).get().getMembers().contains(user1));
+        // Force refresh from database
+        entityManager.flush();
+        entityManager.clear();
+
+        // Refresh user from database
+        invitedUser = userRepository.findByUsername(invitedUser.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Verify invite was removed from user's received invites
+        assertFalse(invitedUser.getInvitesReceived().contains(createdInvite), "Invite should be removed from user's received invites");
+        
+        // Verify invite was deleted from repository
+        assertFalse(inviteRepository.existsById(createdInvite.getId()), "Invite should be deleted from repository");
+
+        // Verify user was not added to group
+        assertFalse(groupRepository.findById(testGroup.getId()).get().getMembers().contains(invitedUser), "User should not be added to group");
+    }
+
+    @Test
+    void createInvite_withoutPermission_shouldFail() throws Exception {
+        // Try to create invite as invited user (who is not admin)
+        InviteDto inviteDto = InviteDto.builder()
+                .type(Type.GROUP)
+                .typeId(testGroup.getId())
+                .typeName(testGroup.getName())
+                .groupName(testGroup.getName())
+                .eventDate(LocalDate.now())
+                .senderUsername(invitedUser.getUsername())
+                .receiverUsernames(new HashSet<>(Set.of("someother@test.com")))
+                .build();
+
+        mockMvc.perform(post("/invites")
+                        .header("Authorization", "Bearer " + invitedUserToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(inviteDto)))
+                .andExpect(status().isForbidden());
     }
 }

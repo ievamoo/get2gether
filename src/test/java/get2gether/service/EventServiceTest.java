@@ -13,13 +13,17 @@ import get2gether.model.Group;
 import get2gether.enums.Type;
 import get2gether.model.User;
 import get2gether.repository.EventRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,12 +48,30 @@ class EventServiceTest {
     @InjectMocks
     private EventService testEventService;
 
-    private final EventDto eventDto = TestData.getEventDto();
-    private final Group group = TestData.getGroupWithoutId();
-    private final Event event = TestData.getEvent();
-    private final Event savedEvent = TestData.getSavedEvent();
-    private final User host = TestData.getTestUser();
-    private final User newMember = TestData.getNotHostUser();
+    private EventDto eventDto;
+    private Group group;
+    private Event event;
+    private Event savedEvent;
+    private User host;
+    private User newMember;
+
+    @BeforeEach
+    void setUp() {
+        // Initialize test data
+        eventDto = TestData.getEventDto();
+        group = TestData.getGroupWithoutId();
+        event = TestData.getEvent();
+        savedEvent = TestData.getSavedEvent();
+        host = TestData.getTestUser();
+        newMember = TestData.getNotHostUser();
+
+        // Set up relationships
+        savedEvent.setGroup(group);
+        savedEvent.setHostUsername(host.getUsername());
+        savedEvent.setGoingMembers(new HashSet<>(Set.of(host)));
+        group.setMembers(new HashSet<>(Set.of(host)));
+        group.setAdmin(host);
+    }
 
     @Test
     void createEvent_shouldSaveEventAndPublishEvents_whenValidInput() {
@@ -66,6 +88,9 @@ class EventServiceTest {
         assertEquals(savedEvent.getName(), result.getName());
         assertEquals(savedEvent.getDescription(), result.getDescription());
         assertEquals(savedEvent.getDate(), result.getDate());
+        
+        verify(eventPublisher).publishEventAction(EventAction.CREATED, savedEvent);
+        verify(eventPublisher).publishEventAttendanceChanged(savedEvent, savedEvent.getDate(), host, true);
     }
 
     @Test
@@ -98,12 +123,12 @@ class EventServiceTest {
     void deleteEvent_shouldDeleteEvent_whenUserIsHost() {
         when(eventRepository.findById(1L)).thenReturn(Optional.of(savedEvent));
         doNothing().when(eventRepository).deleteById(1L);
-        doNothing().when(eventPublisher).publishEventDeletedEvent(any());
+        doNothing().when(eventPublisher).publishEventAction(EventAction.DELETED, savedEvent);
 
         testEventService.deleteEvent(1L, "test@gmail.com");
 
         verify(eventRepository).deleteById(1L);
-        verify(eventPublisher).publishEventDeletedEvent(any());
+        verify(eventPublisher).publishEventAction(EventAction.DELETED, savedEvent);
     }
 
     @Test
@@ -136,15 +161,15 @@ class EventServiceTest {
     void addUserToEvent_shouldAddUserAndPublishAttendanceChangedEvent() {
         when(eventRepository.findById(1L)).thenReturn(Optional.of(savedEvent));
         when(eventRepository.save(any(Event.class))).thenReturn(savedEvent);
-        doNothing().when(eventPublisher).publishEventAttendanceChangedEvent(any());
+        doNothing().when(eventPublisher).publishEventAttendanceChanged(savedEvent, savedEvent.getDate(), newMember, true);
 
         testEventService.addUserToEvent(1L, newMember);
 
         assertTrue(newMember.getGoingEvents().contains(savedEvent));
         assertTrue(savedEvent.getGoingMembers().contains(newMember));
 
-        verify(eventRepository).save(any(Event.class));
-        verify(eventPublisher).publishEventAttendanceChangedEvent(any());
+        verify(eventRepository).save(savedEvent);
+        verify(eventPublisher).publishEventAttendanceChanged(savedEvent, savedEvent.getDate(), newMember, true);
     }
 
     @Test
@@ -207,24 +232,24 @@ class EventServiceTest {
         when(userService.getUserFromDb("test@gmail.com")).thenReturn(host);
         when(eventRepository.save(event)).thenReturn(savedEvent);
         when(eventMapper.modelToDtoOnGet(savedEvent)).thenReturn(eventDto);
-        doNothing().when(eventPublisher).publishEventAction(any(), any());
-        doNothing().when(eventPublisher).publishEventAttendanceChanged(any(), any(), any(), any());
+        doNothing().when(eventPublisher).publishEventAction(any(EventAction.class), any(Event.class));
+        doNothing().when(eventPublisher).publishEventAttendanceChanged(any(Event.class), any(LocalDate.class), any(User.class), anyBoolean());
 
         testEventService.createEvent(eventDto, "test@gmail.com");
 
-        verify(eventPublisher).publishEventAction(EventAction.CREATED, any());
-        verify(eventPublisher).publishEventAttendanceChanged(any(), any(), any(), any());
+        verify(eventPublisher).publishEventAction(eq(EventAction.CREATED), any(Event.class));
+        verify(eventPublisher).publishEventAttendanceChanged(any(Event.class), any(LocalDate.class), any(User.class), anyBoolean());
     }
 
     @Test
     void deleteEvent_shouldPublishEvent() {
         when(eventRepository.findById(1L)).thenReturn(Optional.of(savedEvent));
         doNothing().when(eventRepository).deleteById(1L);
-        doNothing().when(eventPublisher).publishEventAction(any(), any());
+        doNothing().when(eventPublisher).publishEventAction(any(EventAction.class), any(Event.class));
 
         testEventService.deleteEvent(1L, "test@gmail.com");
 
         verify(eventRepository).deleteById(1L);
-        verify(eventPublisher).publishEventAction(EventAction.DELETED, any());
+        verify(eventPublisher).publishEventAction(eq(EventAction.DELETED), any(Event.class));
     }
 }
