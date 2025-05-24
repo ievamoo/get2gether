@@ -1,5 +1,7 @@
 package get2gether.exception;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +24,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(
             {UsernameNotFoundException.class,
-                    ResourceNotFoundException.class}
+            ResourceNotFoundException.class,
+            EntityNotFoundException.class}
     )
     public ResponseEntity<Map<String, Object>> handleNotFound(Exception ex) {
-        return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
-    }
-
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleEntityNotFound(Exception ex) {
         return createErrorResponse(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
@@ -46,6 +44,27 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, Object>> handleBadCredentials(BadCredentialsException ex) {
         return createErrorResponse("Invalid username or password", HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(RegistrationException.class)
+    public ResponseEntity<Map<String, Object>> handleRegistration(RegistrationException ex) {
+        return createErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler({ExpiredJwtException.class, JwtException.class})
+    public ResponseEntity<Map<String, Object>> handleJwtException(Exception ex) {
+        String message = ex instanceof ExpiredJwtException ? "Token has expired" : "Invalid token";
+        return createErrorResponse(message, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(Exception ex) {
+        return createErrorResponse(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NullPointerException.class)
+    public ResponseEntity<Map<String, Object>> handleNullPointer(NullPointerException ex) {
+        return createErrorResponse("An internal error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private ResponseEntity<Map<String, Object>> createErrorResponse(String message, HttpStatus status) {

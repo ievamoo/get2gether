@@ -5,6 +5,7 @@ import get2gether.dto.UserDto;
 import get2gether.event.EventPublisher;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceAlreadyExistsException;
+import get2gether.exception.ResourceNotFoundException;
 import get2gether.mapper.EventMapper;
 import get2gether.mapper.GroupMapper;
 import get2gether.mapper.UserMapper;
@@ -149,7 +150,7 @@ class GroupServiceTest {
         when(groupRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(EntityNotFoundException.class, () -> groupService.getGroupById(999L));
+        assertThrows(ResourceNotFoundException.class, () -> groupService.getGroupById(999L));
         verify(groupRepository).findById(999L);
     }
 
