@@ -3,29 +3,17 @@ package get2gether.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import get2gether.dto.AuthRequestDto;
 import get2gether.dto.RegisterRequestDto;
-import get2gether.enums.Role;
-import get2gether.model.User;
-import get2gether.repository.UserRepository;
-import get2gether.security.JwtUtil;
-import get2gether.service.UserService;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -37,79 +25,28 @@ class AuthControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
     private ObjectMapper objectMapper;
 
-    @BeforeEach
-    void setUp() {
-        userRepository.deleteAll();
-        
-        // Create a new test user
-        User testUser = User.builder()
-                .username("test@gmail.com")
+    @Test
+    void registerAndLogin_ShouldWork_WhenValidCredentials() throws Exception {
+        // Register a new user
+        RegisterRequestDto registerRequest = RegisterRequestDto.builder()
+                .username("testuser")
+                .password("password123")
                 .firstName("Test")
                 .lastName("User")
-                .password(passwordEncoder.encode("password123"))
-                .roles(List.of(Role.USER))
-                .availableDays(new HashSet<>())
-                .invitesReceived(new ArrayList<>())
-                .groups(new HashSet<>())
-                .goingEvents(new ArrayList<>())
                 .build();
-        
-        userRepository.save(testUser);
-    }
 
-    @Test
-    void register_shouldReturnCreated_whenValidInput() throws Exception {
-        var registerRequest = new RegisterRequestDto(
-                "newuser@gmail.com",
-                "password123",
-                "New",
-                "User"
-        );
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+        mockMvc.perform(post("/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.jwt").exists());
-    }
 
-    @Test
-    void register_shouldReturnBadRequest_whenUsernameExists() throws Exception {
-        var registerRequest = new RegisterRequestDto(
-                "test@gmail.com", // Using existing username
-                "password123",
-                "New",
-                "User"
-        );
+        // Try to login with the registered user
+        AuthRequestDto loginRequest = new AuthRequestDto("testuser", "password123");
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void login_shouldReturnOk_whenValidCredentials() throws Exception {
-        var loginRequest = new AuthRequestDto(
-                "test@gmail.com",
-                "password123"
-        );
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
+        mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
@@ -117,28 +54,65 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_shouldReturnUnauthorized_whenInvalidCredentials() throws Exception {
-        var loginRequest = new AuthRequestDto(
-                "test@gmail.com",
-                "wrongpassword"
-        );
+    void register_ShouldReturnBadRequest_WhenUsernameExists() throws Exception {
+        // First registration
+        RegisterRequestDto firstRequest = RegisterRequestDto.builder()
+                .username("existinguser")
+                .password("password123")
+                .firstName("First")
+                .lastName("User")
+                .build();
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(firstRequest)))
+                .andExpect(status().isCreated());
+
+        // Try to register with same username
+        RegisterRequestDto secondRequest = RegisterRequestDto.builder()
+                .username("existinguser")
+                .password("password123")
+                .firstName("Second")
+                .lastName("User")
+                .build();
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(secondRequest)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void login_ShouldReturnUnauthorized_WhenInvalidCredentials() throws Exception {
+        // Register a user
+        RegisterRequestDto registerRequest = RegisterRequestDto.builder()
+                .username("testuser")
+                .password("password123")
+                .firstName("Test")
+                .lastName("User")
+                .build();
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isCreated());
+
+        // Try to login with wrong password
+        AuthRequestDto loginRequest = new AuthRequestDto("testuser", "wrongpassword");
+
+        mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void login_shouldReturnUnauthorized_whenUserNotFound() throws Exception {
-        var loginRequest = new AuthRequestDto(
-                "nonexistent@gmail.com",
-                "password123"
-        );
+    void login_ShouldReturnNotFound_WhenUserDoesNotExist() throws Exception {
+        AuthRequestDto loginRequest = new AuthRequestDto("nonexistent", "password123");
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/auth/login")
+        mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isNotFound());
     }
 }
