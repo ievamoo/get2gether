@@ -3,8 +3,7 @@ package get2gether.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import get2gether.TestData;
 import get2gether.dto.AuthRequestDto;
-import get2gether.dto.RegisterRequestDto;
-import get2gether.model.Role;
+import get2gether.enums.Role;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
 import get2gether.security.JwtUtil;
@@ -15,7 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -24,7 +23,7 @@ import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestPropertySource(locations = "classpath:application-test.properties")
+@ActiveProfiles("test")
 @Transactional
 class AuthControllerTest {
 

@@ -4,6 +4,8 @@ import get2gether.dto.EventDto;
 import get2gether.dto.MessageDto;
 import get2gether.dto.RegisterRequestDto;
 import get2gether.dto.UserDto;
+import get2gether.enums.Role;
+import get2gether.enums.Type;
 import get2gether.model.*;
 
 import java.time.LocalDate;

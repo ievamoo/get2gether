@@ -1,6 +1,6 @@
 package get2gether.config;
 
-import get2gether.model.Role;
+import get2gether.enums.Role;
 import get2gether.security.JwtRequestFilter;
 import get2gether.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;

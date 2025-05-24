@@ -3,7 +3,6 @@ package get2gether.service;
 import get2gether.TestData;
 import get2gether.dto.UserDto;
 import get2gether.exception.ResourceNotFoundException;
-import get2gether.model.ResourceType;
 import get2gether.mapper.UserMapper;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;

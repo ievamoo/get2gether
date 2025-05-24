@@ -1,6 +1,6 @@
 package get2gether.exception;
 
-import get2gether.model.ResourceType;
+import get2gether.enums.ResourceType;
 
 public class ResourceAlreadyExistsException extends RuntimeException {
     public ResourceAlreadyExistsException(ResourceType resourceType, String message) {

@@ -2,7 +2,10 @@ package get2gether.service;
 
 import get2gether.dto.EventDto;
 import get2gether.dto.EventStatusDto;
-import get2gether.event.*;
+import get2gether.enums.EventAction;
+import get2gether.enums.ResourceType;
+import get2gether.enums.Type;
+import get2gether.event.EventPublisher;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.mapper.EventMapper;
@@ -63,8 +66,8 @@ public class EventService {
         event.setGroup(group).setHostUsername(username).setGoingMembers(Set.of(host));
         var savedEvent = eventRepository.save(event);
         log.info("[EventService]: Created new event '{}' by host {}", savedEvent.getName(), username);
-        eventPublisher.publishEventCreatedEvent(new EventCreatedEvent(this, savedEvent));
-        eventPublisher.publishEventAttendanceChangedEvent(new EventAttendanceChangedEvent(this, savedEvent.getDate(), host, true));
+        eventPublisher.publishEventAction(EventAction.CREATED, savedEvent);
+        eventPublisher.publishEventAttendanceChanged(savedEvent, savedEvent.getDate(), host, true);
         return eventMapper.modelToDtoOnGet(savedEvent);
     }
 
@@ -124,7 +127,7 @@ public class EventService {
         checkIfUserIsAHost(username, event.getHostUsername());
         eventRepository.deleteById(eventId);
         log.info("[EventService]: Event '{}' deleted by host {}", event.getName(), username);
-        eventPublisher.publishEventDeletedEvent(new EventDeletedEvent(this, event));
+        eventPublisher.publishEventAction(EventAction.DELETED, event);
     }
 
     /**
@@ -175,7 +178,7 @@ public class EventService {
         event.getGoingMembers().add(user);
         eventRepository.save(event);
         log.info("[EventService]: User {} added to event '{}'", user.getUsername(), event.getName());
-        eventPublisher.publishEventAttendanceChangedEvent(new EventAttendanceChangedEvent(this, event.getDate(), user, true));
+        eventPublisher.publishEventAttendanceChanged(event, event.getDate(), user, true);
     }
 
     /**

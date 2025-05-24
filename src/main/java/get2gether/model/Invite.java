@@ -1,5 +1,6 @@
 package get2gether.model;
 
+import get2gether.enums.Type;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

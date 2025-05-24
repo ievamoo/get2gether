@@ -1,4 +1,4 @@
-package get2gether.model;
+package get2gether.enums;
 
 public enum Role {
     USER,

@@ -4,7 +4,7 @@ import get2gether.dto.EventDto;
 import get2gether.dto.UserDto;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.model.Event;
-import get2gether.model.ResourceType;
+import get2gether.enums.ResourceType;
 import get2gether.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

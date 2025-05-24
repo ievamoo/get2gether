@@ -1,7 +1,7 @@
 package get2gether.repository;
 
 import get2gether.model.Invite;
-import get2gether.model.Type;
+import get2gether.enums.Type;
 import get2gether.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

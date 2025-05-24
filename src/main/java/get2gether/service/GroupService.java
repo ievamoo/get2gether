@@ -4,9 +4,7 @@ import get2gether.dto.EventDto;
 import get2gether.dto.GroupDto;
 import get2gether.dto.UserDto;
 import get2gether.event.EventPublisher;
-import get2gether.event.GroupCreatedEvent;
-import get2gether.event.GroupDeletedEvent;
-import get2gether.event.GroupLeaveEvent;
+import get2gether.enums.GroupAction;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceAlreadyExistsException;
 import get2gether.exception.ResourceNotFoundException;
@@ -15,7 +13,7 @@ import get2gether.mapper.GroupMapper;
 import get2gether.mapper.UserMapper;
 import get2gether.model.Event;
 import get2gether.model.Group;
-import get2gether.model.ResourceType;
+import get2gether.enums.ResourceType;
 import get2gether.model.User;
 import get2gether.repository.EventRepository;
 import get2gether.repository.GroupRepository;
@@ -68,7 +66,7 @@ public class GroupService {
      * 1. Checks if a group with the same name exists
      * 2. Creates a new group with the current user as admin
      * 3. Saves the group to the database
-     * 4. Publishes a GroupCreatedEvent to notify invited users
+     * 4. Publishes a GroupActionEvent to notify invited users
      *
      * @param username the username of the group creator
      * @param groupDto the group information
@@ -83,7 +81,7 @@ public class GroupService {
         var currentUser = userService.getUserFromDb(username);
         var group = groupMapper.dtoToModelOnGroupCreate(groupDto, currentUser);
         var savedGroup = groupRepository.save(group);
-        eventPublisher.publishGroupCreatedEvent(new GroupCreatedEvent(this, savedGroup, groupDto.getInvitedUsernames()));
+        eventPublisher.publishGroupAction(GroupAction.CREATED, savedGroup, groupDto.getInvitedUsernames());
         return groupMapper.modelToDtoOnGroupCreate(savedGroup);
     }
 
@@ -96,8 +94,9 @@ public class GroupService {
      * @throws EntityNotFoundException if the group is not found
      */
     @Transactional
-    public GroupDto updateGroup(GroupDto editedGroup, Long id) {
+    public GroupDto updateGroup(GroupDto editedGroup, Long id, String username) {
         var group = getGroupByIdFromDb(id);
+        checkIfActionAllowed(username, group);
         group.setName(editedGroup.getName()).setGroupColor(editedGroup.getGroupColor());
         var updatedGroup = groupRepository.save(group);
         return groupMapper.modelToDtoOnUpdate(updatedGroup);
@@ -108,7 +107,7 @@ public class GroupService {
      * The method:
      * 1. Verifies the user has permission to delete the group
      * 2. Deletes the group from the database
-     * 3. Publishes a GroupDeletedEvent to notify members
+     * 3. Publishes a GroupActionEvent to notify members
      *
      * @param id the ID of the group to delete
      * @param username the username of the user attempting to delete
@@ -120,7 +119,7 @@ public class GroupService {
         var group = getGroupByIdFromDb(id);
         checkIfActionAllowed(username, group);
         groupRepository.deleteById(id);
-        eventPublisher.publishGroupDeletedEvent(new GroupDeletedEvent(this, group));
+        eventPublisher.publishGroupAction(GroupAction.DELETED, group);
     }
 
     /**
@@ -176,7 +175,7 @@ public class GroupService {
      * 1. Verifies the user is a member of the group
      * 2. Checks if the user is not the group admin
      * 3. Removes the user from the group and its events
-     * 4. Publishes a GroupLeaveEvent to notify other members
+     * 4. Publishes a GroupActionEvent to notify other members
      *
      * @param groupId the ID of the group
      * @param username the username of the user leaving
@@ -195,7 +194,7 @@ public class GroupService {
         }
 
         checkIfAdmin(username, groupToLeave);
-        eventPublisher.publishGroupLeaveEvent(new GroupLeaveEvent(this, groupToLeave, currentUser));
+        eventPublisher.publishGroupAction(GroupAction.LEAVE, groupToLeave, currentUser);
 
         groupToLeave.getMembers().remove(currentUser);
         currentUser.getGroups().remove(groupToLeave);
@@ -260,7 +259,7 @@ public class GroupService {
      */
     private void checkIfActionAllowed(String username, Group group) {
         if (!group.getAdmin().getUsername().equals(username)) {
-            throw new ForbiddenActionException("You are not allowed to delete this group.");
+            throw new ForbiddenActionException("Action is allowed for group admins only.");
         }
     }
 
@@ -322,5 +321,4 @@ public class GroupService {
         return groupRepository.findByIdWithMembers(id)
                 .orElseThrow(() -> new ResourceNotFoundException(ResourceType.GROUP, "id: " + id));
     }
-
 }
