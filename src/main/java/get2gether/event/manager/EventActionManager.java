@@ -1,16 +1,9 @@
 package get2gether.event.manager;
 
-import get2gether.event.EventActionEvent;
 import get2gether.enums.Type;
-import get2gether.mapper.InviteMapper;
-import get2gether.model.Event;
-import get2gether.model.Invite;
-import get2gether.model.User;
-import get2gether.repository.InviteRepository;
+import get2gether.event.EventActionEvent;
 import get2gether.repository.UserRepository;
 import get2gether.service.InviteService;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;

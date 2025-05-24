@@ -16,7 +16,6 @@ public class EventActionEvent extends ApplicationEvent {
     private final User user;
     private final Boolean isGoing;
 
-    // Constructor for CREATED and DELETED actions
     public EventActionEvent(Object source, EventAction action, Event event) {
         super(source);
         if (action != EventAction.CREATED && action != EventAction.DELETED) {
@@ -29,7 +28,6 @@ public class EventActionEvent extends ApplicationEvent {
         this.isGoing = null;
     }
 
-    // Constructor for ATTENDANCE_CHANGED action
     public EventActionEvent(Object source, Event event, LocalDate eventDate, User user, Boolean isGoing) {
         super(source);
         this.action = EventAction.ATTENDANCE_CHANGED;

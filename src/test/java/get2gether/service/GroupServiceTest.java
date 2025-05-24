@@ -274,7 +274,7 @@ class GroupServiceTest {
     @Test
     void deleteGroup_ShouldSucceed_WhenUserIsAdmin() {
         // Arrange
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
+        when(groupRepository.findByIdWithMembers(1L)).thenReturn(Optional.of(testGroup));
         doNothing().when(groupRepository).deleteById(1L);
         doNothing().when(eventPublisher).publishGroupAction(GroupAction.DELETED, testGroup);
 
@@ -282,7 +282,7 @@ class GroupServiceTest {
         groupService.deleteGroup(1L, adminUser.getUsername());
 
         // Assert
-        verify(groupRepository).findById(1L);
+        verify(groupRepository).findByIdWithMembers(1L);
         verify(groupRepository).deleteById(1L);
         verify(eventPublisher).publishGroupAction(GroupAction.DELETED, testGroup);
     }
@@ -290,13 +290,13 @@ class GroupServiceTest {
     @Test
     void deleteGroup_ShouldThrowException_WhenUserIsNotAdmin() {
         // Arrange
-        when(groupRepository.findById(1L)).thenReturn(Optional.of(testGroup));
+        when(groupRepository.findByIdWithMembers(1L)).thenReturn(Optional.of(testGroup));
 
         // Act & Assert
         assertThrows(ForbiddenActionException.class, 
             () -> groupService.deleteGroup(1L, memberUser.getUsername()));
         
-        verify(groupRepository).findById(1L);
+        verify(groupRepository).findByIdWithMembers(1L);
         verify(groupRepository, never()).deleteById(anyLong());
     }
 
