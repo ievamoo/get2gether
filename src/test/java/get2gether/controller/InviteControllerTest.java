@@ -4,27 +4,45 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import get2gether.dto.InviteDto;
-import get2gether.enums.Type;
+import get2gether.model.*;
+import get2gether.repository.GroupRepository;
+import get2gether.repository.InviteRepository;
+import get2gether.repository.UserRepository;
 import get2gether.service.InviteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@SpringBootTest
+@AutoConfigureMockMvc
+@TestPropertySource(locations = "classpath:application-test.properties")
+@Transactional
 class InviteControllerTest {
+
+    @Autowired
+    private WebApplicationContext context;
 
     @Autowired
     private MockMvc mockMvc;
@@ -33,52 +51,166 @@ class InviteControllerTest {
     private InviteService inviteService;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private GroupRepository groupRepository;
+
+    @Autowired
+    private InviteRepository inviteRepository;
+
+    @Autowired
     private ObjectMapper objectMapper;
+
+    private User testUser;
+    private User user1;
+    private User user2;
+    private Group testGroup;
 
     @BeforeEach
     void setUp() {
-        inviteService = Mockito.mock(InviteService.class);
-        InviteController controller = new InviteController(inviteService);
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
-        objectMapper = new ObjectMapper();
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
+
+        // Configure ObjectMapper
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+        // Create test users
+        testUser = User.builder()
+                .username("testuser@test.com")
+                .firstName("Test")
+                .lastName("User")
+                .password("password")
+                .roles(new ArrayList<>(List.of(Role.USER)))
+                .invitesReceived(new ArrayList<>())
+                .groups(new HashSet<>())
+                .goingEvents(new ArrayList<>())
+                .availableDays(new HashSet<>())
+                .build();
+        userRepository.save(testUser);
+
+        user1 = User.builder()
+                .username("user1@test.com")
+                .firstName("User")
+                .lastName("One")
+                .password("password")
+                .roles(new ArrayList<>(List.of(Role.USER)))
+                .invitesReceived(new ArrayList<>())
+                .groups(new HashSet<>())
+                .goingEvents(new ArrayList<>())
+                .availableDays(new HashSet<>())
+                .build();
+        userRepository.save(user1);
+
+        user2 = User.builder()
+                .username("user2@test.com")
+                .firstName("User")
+                .lastName("Two")
+                .password("password")
+                .roles(new ArrayList<>(List.of(Role.USER)))
+                .invitesReceived(new ArrayList<>())
+                .groups(new HashSet<>())
+                .goingEvents(new ArrayList<>())
+                .availableDays(new HashSet<>())
+                .build();
+        userRepository.save(user2);
+
+        // Create test group with mutable collections
+        Set<User> members = new HashSet<>();
+        members.add(testUser);
+
+        testGroup = Group.builder()
+                .name("Test Group")
+                .admin(testUser)
+                .members(members)
+                .events(new ArrayList<>())
+                .messages(new ArrayList<>())
+                .build();
+        groupRepository.save(testGroup);
+        testUser.getGroups().add(testGroup);
+        userRepository.save(testUser);
     }
 
     @Test
+    @WithMockUser(username = "testuser@test.com")
     void createGroupInvite_shouldReturnCreated() throws Exception {
         InviteDto dto = InviteDto.builder()
                 .type(Type.GROUP)
-                .typeId(123L)
-                .typeName("Group A")
-                .groupName("Group A")
+                .typeId(testGroup.getId())
+                .typeName(testGroup.getName())
+                .groupName(testGroup.getName())
                 .eventDate(LocalDate.now())
-                .senderUsername("testuser")
-                .receiverUsernames(Set.of("user1", "user2"))
+                .senderUsername(testUser.getUsername())
+                .receiverUsernames(new HashSet<>(Set.of(user1.getUsername(), user2.getUsername())))
                 .build();
 
-        when(inviteService.createNewInviteWhenGroupAlreadyExists(any(), eq("testuser")))
-                .thenReturn("Invite created successfully");
-
         mockMvc.perform(post("/invites")
-                        .principal(new TestingAuthenticationToken("testuser", null))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
-                .andExpect(content().string("Invite created successfully"))
                 .andExpect(content().contentType(MediaType.TEXT_PLAIN));
+
+        // Verify invites were created
+        assertTrue(inviteRepository.existsByReceiverAndTypeAndTypeId(user1, Type.GROUP, testGroup.getId()));
+        assertTrue(inviteRepository.existsByReceiverAndTypeAndTypeId(user2, Type.GROUP, testGroup.getId()));
     }
 
     @Test
+    @WithMockUser(username = "user1@test.com")
     void respondToInvite_shouldReturnOk() throws Exception {
-        InviteDto dto = InviteDto.builder().accepted(true).build();
+        // Create an invite first
+        Invite invite = Invite.builder()
+                .type(Type.GROUP)
+                .typeId(testGroup.getId())
+                .typeName(testGroup.getName())
+                .senderUsername(testUser.getUsername())
+                .receiver(user1)
+                .build();
+        user1.getInvitesReceived().add(invite);
+        inviteRepository.save(invite);
 
-        mockMvc.perform(patch("/invites/42")
-                        .principal(new TestingAuthenticationToken("testuser", null))
+        InviteDto responseDto = InviteDto.builder()
+                .accepted(true)
+                .build();
+
+        mockMvc.perform(patch("/invites/" + invite.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
+                        .content(objectMapper.writeValueAsString(responseDto)))
                 .andExpect(status().isOk());
 
-        verify(inviteService).handleInviteResponse("testuser", 42L, true);
+        // Verify invite was processed
+        assertFalse(inviteRepository.existsById(invite.getId()));
+        assertTrue(groupRepository.findById(testGroup.getId()).get().getMembers().contains(user1));
+    }
+
+    @Test
+    @WithMockUser(username = "user1@test.com")
+    void respondToInvite_withDecline_shouldReturnOk() throws Exception {
+        // Create an invite first
+        Invite invite = Invite.builder()
+                .type(Type.GROUP)
+                .typeId(testGroup.getId())
+                .typeName(testGroup.getName())
+                .senderUsername(testUser.getUsername())
+                .receiver(user1)
+                .build();
+        user1.getInvitesReceived().add(invite);
+        inviteRepository.save(invite);
+
+        InviteDto responseDto = InviteDto.builder()
+                .accepted(false)
+                .build();
+
+        mockMvc.perform(patch("/invites/" + invite.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(responseDto)))
+                .andExpect(status().isOk());
+
+        // Verify invite was processed but user not added to group
+        assertFalse(inviteRepository.existsById(invite.getId()));
+        assertFalse(groupRepository.findById(testGroup.getId()).get().getMembers().contains(user1));
     }
 }
