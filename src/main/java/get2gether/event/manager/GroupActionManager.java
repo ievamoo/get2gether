@@ -2,6 +2,7 @@ package get2gether.event.manager;
 
 import get2gether.enums.Type;
 import get2gether.event.GroupActionEvent;
+import get2gether.model.Group;
 import get2gether.model.User;
 import get2gether.service.InviteService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class GroupActionManager extends BaseActionManager {
             case CREATED -> handleGroupCreation(event);
             case DELETED -> handleGroupDeletion(event);
             case LEAVE -> handleGroupLeave(event);
+            case AVAILABLE_DAYS_UPDATED -> handleAvailableDaysUpdate(event);
         }
     }
 
@@ -89,6 +91,17 @@ public class GroupActionManager extends BaseActionManager {
         });
 
         notifyGroup(group.getId(), "User left the group.");
+    }
+
+    private void handleAvailableDaysUpdate(GroupActionEvent event) {
+        var user = event.getUser();
+        var userGroupIds = user.getGroups().stream()
+            .map(Group::getId)
+            .toList();
+
+        userGroupIds.forEach(groupId -> {
+            notifyGroup(groupId, String.format("Available days updated by user %s", user.getUsername()));
+        });
     }
 }
 

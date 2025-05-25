@@ -1,6 +1,8 @@
 package get2gether.service;
 
 import get2gether.dto.UserDto;
+import get2gether.enums.GroupAction;
+import get2gether.event.EventPublisher;
 import get2gether.exception.ForbiddenActionException;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.mapper.UserMapper;
@@ -27,6 +29,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final EventPublisher eventPublisher;
 
     /**
      * Retrieves a user by their username and converts it to a DTO.
@@ -58,6 +61,7 @@ public class UserService {
         var matchingUser = getUserFromDb(username);
         userMapper.updateCurrentUser(updatedUserDto, matchingUser);
         var savedUser = userRepository.save(matchingUser);
+        eventPublisher.publishGroupAction(GroupAction.AVAILABLE_DAYS_UPDATED, savedUser);
         return userMapper.modelToDtoOnGetUser(savedUser);
     }
 
@@ -118,6 +122,12 @@ public class UserService {
         var matchingUser = getUserFromDb(userName);
         matchingUser.setAvailableDays(availableDays);
         var updatedUser = userRepository.save(matchingUser);
+        
+        // Publish events for each group the user is in
+        updatedUser.getGroups().forEach(group -> {
+            eventPublisher.publishGroupAction(GroupAction.AVAILABLE_DAYS_UPDATED, group, updatedUser);
+        });
+        
         return updatedUser.getAvailableDays();
     }
 

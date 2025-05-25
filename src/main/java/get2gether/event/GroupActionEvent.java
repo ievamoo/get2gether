@@ -47,4 +47,11 @@ public class GroupActionEvent extends ApplicationEvent {
     }
 
 
-} 
+    public GroupActionEvent(Object source, GroupAction action, User user) {
+        super(source);
+        this.group = null;
+        this.action = action;
+        this.user = user;
+        this.invitedUsernames = null;
+    }
+}
