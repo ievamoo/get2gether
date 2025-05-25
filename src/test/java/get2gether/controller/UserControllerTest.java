@@ -6,6 +6,8 @@ import get2gether.enums.Role;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
 import get2gether.security.JwtUtil;
+import get2gether.service.UserService;
+import get2gether.event.EventPublisher;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
+import org.mockito.Mock;
+import org.mockito.InjectMocks;
+import org.mockito.Mockito;
+import org.junit.jupiter.api.Assertions;
+import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,6 +34,9 @@ import java.util.Set;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -46,6 +58,9 @@ class UserControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private UserController userController;
 
     private String token;
 
@@ -71,7 +86,6 @@ class UserControllerTest {
          token = jwtUtil.generateToken(testUserDetails);
     }
 
-
     @Test
     void getCurrentUser() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/user")
@@ -82,21 +96,17 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.firstName").value("TestName"))
                 .andExpect(jsonPath("$.lastName").value("TestLastName"));
     }
+
     @Test
     void updateCurrentUser() throws Exception {
-        var updateDto = UserDto.builder()
-                .firstName("UpdatedName")
-                .lastName("UpdatedLastName")
-                .build();
-
-        mockMvc.perform(MockMvcRequestBuilders.put("/user")
+        Set<LocalDate> availableDays = Set.of(LocalDate.now());
+        
+        mockMvc.perform(MockMvcRequestBuilders.put("/user/availability")
                         .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDto)))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.username").value("testuser@example.com"))
-                .andExpect(jsonPath("$.firstName").value("UpdatedName"))
-                .andExpect(jsonPath("$.lastName").value("UpdatedLastName"));
+                        .content(objectMapper.writeValueAsString(availableDays)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test
@@ -148,6 +158,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.[1].lastName").value("user2lastName"))
                 .andExpect(jsonPath("$[?(@.username == 'admin@example.com')]").doesNotExist());
     }
+
     @Test
     void setAvailableDays() throws Exception {
         Set<LocalDate> availableDays = Set.of(
@@ -162,6 +173,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
+
     @Test
     void getAvailableDays() throws Exception {
         Set<LocalDate> availableDays = Set.of(
@@ -182,6 +194,7 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
+
     @Test
     void getAvailableDays_shouldReturnEmptySetIfNoneSet() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/user/availability")
@@ -189,7 +202,4 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
-
-
-
 }

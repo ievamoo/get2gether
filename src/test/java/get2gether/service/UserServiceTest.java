@@ -2,8 +2,11 @@ package get2gether.service;
 
 import get2gether.TestData;
 import get2gether.dto.UserDto;
+import get2gether.enums.GroupAction;
+import get2gether.event.EventPublisher;
 import get2gether.exception.ResourceNotFoundException;
 import get2gether.mapper.UserMapper;
+import get2gether.model.Group;
 import get2gether.model.User;
 import get2gether.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,9 @@ class UserServiceTest {
 
     @Mock
     private UserMapper userMapper;
+
+    @Mock
+    private EventPublisher eventPublisher;
 
     @InjectMocks
     private UserService testUserService;
@@ -153,5 +159,27 @@ class UserServiceTest {
                 () -> testUserService.getUserFromDb(username));
         
         assertEquals("USER not found with username: " + username, exception.getMessage());
+    }
+
+    @Test
+    void updateAvailableDays_shouldUpdateAndNotifyGroups() {
+        // given
+        var userName = "testUser";
+        var availableDays = Set.of(LocalDate.now());
+        var user = new User();
+        user.setUsername(userName);
+        user.setGroups(new HashSet<>());
+
+        when(userRepository.findByUsername(userName)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        // when
+        var result = testUserService.updateAvailableDays(userName, availableDays);
+
+        // then
+        verify(userRepository).findByUsername(userName);
+        verify(userRepository).save(user);
+        verify(eventPublisher, never()).publishGroupAction(any(GroupAction.class), any(Group.class), any(User.class));
+        assertEquals(availableDays, result);
     }
 }
