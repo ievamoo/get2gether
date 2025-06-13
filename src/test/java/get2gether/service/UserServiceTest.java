@@ -163,7 +163,6 @@ class UserServiceTest {
 
     @Test
     void updateAvailableDays_shouldUpdateAndNotifyGroups() {
-        // given
         var userName = "testUser";
         var availableDays = Set.of(LocalDate.now());
         var user = new User();
@@ -173,10 +172,8 @@ class UserServiceTest {
         when(userRepository.findByUsername(userName)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        // when
         var result = testUserService.updateAvailableDays(userName, availableDays);
 
-        // then
         verify(userRepository).findByUsername(userName);
         verify(userRepository).save(user);
         verify(eventPublisher, never()).publishGroupAction(any(GroupAction.class), any(Group.class), any(User.class));
